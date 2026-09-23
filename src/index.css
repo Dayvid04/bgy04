@@ -1,0 +1,284 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE (default)
+═══════════════════════════════════════════════════════════════ */
+:root,
+html.dark {
+  --bg-base:        #050505;
+  --bg-surface:     #080808;
+  --bg-card:        #0a0a0a;
+  --bg-card-alt:    #0c0c0c;
+  --bg-card-deep:   #0D0D0D;
+  --bg-input:       #111111;
+  --bg-hover:       #1a1a1a;
+  --bg-overlay:     rgba(0,0,0,0.85);
+  --bg-subtle:      rgba(255,255,255,0.03);
+
+  --border-base:    #262626;
+  --border-subtle:  #1a1a1a;
+  --border-strong:  #333333;
+  --border-card:    rgba(38,38,38,0.8);
+
+  --text-primary:   #f3f4f6;
+  --text-secondary: #a3a3a3;
+  --text-muted:     #525252;
+  --text-faint:     #404040;
+  --text-inverse:   #050505;
+
+  --accent:         #E50914;
+  --accent-dim:     rgba(229,9,20,0.12);
+  --accent-border:  rgba(229,9,20,0.30);
+
+  --white-btn-bg:   #f3f4f6;
+  --white-btn-text: #050505;
+  --white-btn-hover:#d4d4d4;
+
+  --scrollbar-track:#0a0a0a;
+  --scrollbar-thumb:#262626;
+
+  --navbar-bg:      rgba(0,0,0,0.85);
+  --shadow-card:    0 15px 30px -10px rgba(0,0,0,0.8);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT MODE
+═══════════════════════════════════════════════════════════════ */
+html.light {
+  --bg-base:        #f5f5f5;
+  --bg-surface:     #eeeeee;
+  --bg-card:        #ffffff;
+  --bg-card-alt:    #fafafa;
+  --bg-card-deep:   #ffffff;
+  --bg-input:       #f0f0f0;
+  --bg-hover:       #e5e5e5;
+  --bg-overlay:     rgba(0,0,0,0.55);
+  --bg-subtle:      rgba(0,0,0,0.02);
+
+  --border-base:    #d4d4d4;
+  --border-subtle:  #e5e5e5;
+  --border-strong:  #b5b5b5;
+  --border-card:    rgba(212,212,212,0.8);
+
+  --text-primary:   #0a0a0a;
+  --text-secondary: #404040;
+  --text-muted:     #737373;
+  --text-faint:     #a3a3a3;
+  --text-inverse:   #f5f5f5;
+
+  --accent:         #E50914;
+  --accent-dim:     rgba(229,9,20,0.08);
+  --accent-border:  rgba(229,9,20,0.25);
+
+  --white-btn-bg:   #0a0a0a;
+  --white-btn-text: #f5f5f5;
+  --white-btn-hover:#262626;
+
+  --scrollbar-track:#eeeeee;
+  --scrollbar-thumb:#c4c4c4;
+
+  --navbar-bg:      rgba(245,245,245,0.92);
+  --shadow-card:    0 15px 30px -10px rgba(0,0,0,0.12);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE STYLES
+═══════════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    --font-display: 'Syne', sans-serif;
+    --font-body:    'Plus Jakarta Sans', sans-serif;
+  }
+
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKGROUND REMAPS
+═══════════════════════════════════════════════════════════════ */
+.bg-\[\#050505\]   { background-color: var(--bg-base) !important; }
+.bg-\[\#080808\]   { background-color: var(--bg-surface) !important; }
+.bg-\[\#0a0a0a\]   { background-color: var(--bg-card) !important; }
+.bg-\[\#0c0c0c\]   { background-color: var(--bg-card-alt) !important; }
+.bg-\[\#0C0C0C\]   { background-color: var(--bg-card-alt) !important; }
+.bg-\[\#0D0D0D\]   { background-color: var(--bg-card-deep) !important; }
+.bg-\[\#070707\]   { background-color: var(--bg-surface) !important; }
+
+/* neutral grays */
+.bg-neutral-950    { background-color: var(--bg-surface) !important; }
+.bg-neutral-900    { background-color: var(--bg-card) !important; }
+.bg-neutral-900\/90,
+.bg-neutral-900\/80,
+.bg-neutral-900\/70,
+.bg-neutral-900\/60,
+.bg-neutral-900\/40 { background-color: var(--bg-card) !important; }
+.bg-neutral-800    { background-color: var(--bg-hover) !important; }
+.bg-neutral-800\/70,
+.bg-neutral-800\/60 { background-color: var(--bg-hover) !important; }
+
+/* black */
+.bg-black          { background-color: var(--bg-surface) !important; }
+.bg-black\/40      { background-color: var(--bg-overlay) !important; }
+.bg-black\/80,
+.bg-black\/85      { background-color: var(--bg-overlay) !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BORDER REMAPS
+═══════════════════════════════════════════════════════════════ */
+.border-neutral-900  { border-color: var(--border-subtle) !important; }
+.border-neutral-900\/80 { border-color: var(--border-subtle) !important; }
+.border-neutral-800  { border-color: var(--border-base) !important; }
+.border-neutral-800\/80,
+.border-neutral-800\/90 { border-color: var(--border-card) !important; }
+.border-neutral-700  { border-color: var(--border-strong) !important; }
+.border-neutral-600  { border-color: var(--border-strong) !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TEXT REMAPS
+═══════════════════════════════════════════════════════════════ */
+.text-white          { color: var(--text-primary) !important; }
+.text-neutral-200    { color: var(--text-primary) !important; }
+.text-neutral-300    { color: var(--text-secondary) !important; }
+.text-neutral-400    { color: var(--text-secondary) !important; }
+.text-neutral-500    { color: var(--text-muted) !important; }
+.text-neutral-600    { color: var(--text-muted) !important; }
+.text-neutral-700    { color: var(--text-faint) !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   WHITE / BLACK BUTTON REMAPS
+   (Shop Now, Add to Bag, Checkout, etc.)
+═══════════════════════════════════════════════════════════════ */
+.bg-white            { background-color: var(--white-btn-bg) !important; }
+.text-black          { color: var(--white-btn-text) !important; }
+.hover\:bg-neutral-200:hover { background-color: var(--white-btn-hover) !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ACCENT REMAPS
+═══════════════════════════════════════════════════════════════ */
+.bg-\[\#E50914\]\/15,
+.bg-\[\#E50914\]\/\[0\.08\],
+.bg-\[\#E50914\]\/10 { background-color: var(--accent-dim) !important; }
+.border-\[\#E50914\]\/30 { border-color: var(--accent-border) !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════════════════════ */
+header {
+  background-color: transparent;
+}
+header.scrolled,
+header[class*="bg-black"] {
+  background-color: var(--navbar-bg) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom-color: var(--border-base) !important;
+}
+/* Target the scrolled state class applied by Navbar */
+.bg-black\/85 {
+  background-color: var(--navbar-bg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PRODUCT CARDS
+═══════════════════════════════════════════════════════════════ */
+/* Card container */
+[class*="bg-[#0D0D0D]"] {
+  background-color: var(--bg-card-deep) !important;
+  border-color: var(--border-card) !important;
+  box-shadow: var(--shadow-card);
+}
+/* Card image stage */
+[class*="bg-[#070707]"] {
+  background-color: var(--bg-surface) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INPUTS, TEXTAREAS, SELECTS
+═══════════════════════════════════════════════════════════════ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-base) !important;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1;
+}
+select option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODALS & DRAWERS (QuickView, Auth, Cart, Admin, Account)
+═══════════════════════════════════════════════════════════════ */
+/* Modal backdrops */
+.backdrop-blur-md,
+.backdrop-blur-sm {
+  background-color: var(--bg-overlay) !important;
+}
+
+/* divide lines inside modals/drawers */
+.divide-neutral-900 > * + * {
+  border-color: var(--border-subtle) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════════════ */
+footer {
+  background-color: var(--bg-base) !important;
+  border-top-color: var(--border-subtle) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HERO AMBIENT GLOW — keep subtle in light mode
+═══════════════════════════════════════════════════════════════ */
+html.light .bg-\[\#E50914\]\/\[0\.08\] {
+  background-color: rgba(229,9,20,0.04) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SMOOTH TRANSITIONS ON THEME SWITCH
+   (exclude animation-heavy elements)
+═══════════════════════════════════════════════════════════════ */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+}
+
+/* Don't interfere with framer-motion transforms */
+[style*="transform"],
+[style*="opacity"],
+[data-projection-id] {
+  transition: none !important;
+}

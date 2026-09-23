@@ -1,0 +1,788 @@
+{
+  "users": [
+    {
+      "_id": "usr_admin_1",
+      "name": "admin",
+      "email": "admin@bgy.com",
+      "passwordHash": "$2b$10$XRG6sIB5I1F1Wb6gZ/Q3Qen.BWFFVf/C4hLsRs7UfWgMaI6uDcfoW",
+      "phone": "+250 788 123 456",
+      "role": "admin",
+      "wishlist": [
+        "prod_bgy_aero_1"
+      ],
+      "createdAt": "2026-06-24T13:27:36.626Z"
+    },
+    {
+      "_id": "usr_cust_alex",
+      "name": "Alex Mercer",
+      "email": "alex@example.com",
+      "passwordHash": "$2b$10$i3Hw2JEdn53nzaGhNg/77uFpgwtsOrN0dFPBIWkDss8CXpYQfQAKW",
+      "phone": "+250 783 456 789",
+      "role": "customer",
+      "address": {
+        "street": "KN 7 Rd, Kicukiro",
+        "city": "Kigali",
+        "state": "Kigali City",
+        "zip": "00100",
+        "country": "Rwanda"
+      },
+      "wishlist": [
+        "prod_bgy_aero_1",
+        "prod_bgy_gravity_high"
+      ],
+      "createdAt": "2026-07-24T13:27:36.626Z"
+    },
+    {
+      "name": "mpabuka ellie",
+      "email": "niyigenadavid0@gmail.com",
+      "passwordHash": "$2b$10$ujYdU4DikREv9IGQ4KlEQuTrqMbFKwifcy94HQ7QblNAvQSiKPdn.",
+      "phone": "07951395166",
+      "role": "customer",
+      "wishlist": [],
+      "_id": "usr_mud08d361mt3fr",
+      "createdAt": "2026-09-22T18:25:30.690Z"
+    },
+    {
+      "name": "Niyigena david",
+      "email": "niyigenadavid45@gmail.com",
+      "passwordHash": "$2b$10$z0MBWnYFklBl5qtusi3FBuPrMAHlxIqN3UpS0uC6K9w0wDsdVeJt2",
+      "phone": "0795139774",
+      "role": "customer",
+      "wishlist": [],
+      "_id": "usr_mudv6dufzlx43r",
+      "createdAt": "2026-09-23T08:51:46.455Z"
+    }
+  ],
+  "products": [
+    {
+      "_id": "prod_bgy_aero_1",
+      "name": "BGY Aero-1 Proto",
+      "tagline": "A bold everyday sneaker selected for comfort and confident movement",
+      "description": "The Aero-1 Proto brings a clean athletic profile, breathable materials, and responsive cushioning together for everyday movement. Selected by BGY for customers who want dependable comfort and distinctive style.",
+      "price": 240,
+      "discountPrice": 210,
+      "images": [
+        "https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Sneakers",
+      "gender": "men",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Onyx / Crimson",
+          "hex": "#111111"
+        },
+        {
+          "name": "Pure White",
+          "hex": "#F9FAFB"
+        },
+        {
+          "name": "Graphite",
+          "hex": "#374151"
+        }
+      ],
+      "stock": 23,
+      "rating": 4.9,
+      "numReviews": 38,
+      "reviews": [
+        {
+          "_id": "rev_1",
+          "userId": "usr_cust_alex",
+          "userName": "Alex Mercer",
+          "rating": 5,
+          "title": "Insane comfort and striking aesthetic",
+          "comment": "The transition between the B-G-Y design ethos shows in every stitch. The shoe is lighter than expected and turns heads everywhere.",
+          "createdAt": "2026-09-19T13:27:36.359Z"
+        },
+        {
+          "_id": "rev_2",
+          "userId": "usr_cust_2",
+          "userName": "Elena Rostova",
+          "rating": 5,
+          "title": "Flawless minimalism",
+          "comment": "High build quality, genuine leather accents, and the crimson detail is just subtle enough. True to size.",
+          "createdAt": "2026-09-15T13:27:36.360Z"
+        }
+      ],
+      "featured": true,
+      "newArrival": true,
+      "specs": {
+        "upperMaterial": "Engineered Technical Ripstop & Full-Grain Trim",
+        "midsole": "Nitrogen-Infused Hyper-Foam",
+        "outsole": "High-Abrasion Carbon Grip Compound",
+        "weight": "285g (Men 9US)",
+        "drop": "8mm"
+      },
+      "createdAt": "2026-09-08T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_phantom_low",
+      "name": "BGY Phantom Low",
+      "tagline": "Architectural monochrome luxury for everyday motion",
+      "description": "Stripped of all noise. The Phantom Low is molded from premium buttery calfskin leather with a concealed lacing tunnel and bespoke BGY sculptured cupsole. A masterclass in modern restraint and tactile luxury.",
+      "price": 215,
+      "images": [
+        "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Sneakers",
+      "gender": "women",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Matte Obsidian",
+          "hex": "#0B0B0B"
+        },
+        {
+          "name": "Chalk White",
+          "hex": "#FFFFFF"
+        }
+      ],
+      "stock": 18,
+      "rating": 4.8,
+      "numReviews": 24,
+      "reviews": [
+        {
+          "_id": "rev_3",
+          "userId": "usr_cust_3",
+          "userName": "Marcus Vance",
+          "rating": 5,
+          "title": "Best daily sneaker I own",
+          "comment": "Clean silhouette. Works seamlessly with tailored trousers or casual denim. Highly recommended.",
+          "createdAt": "2026-09-17T13:27:36.360Z"
+        }
+      ],
+      "featured": true,
+      "newArrival": false,
+      "specs": {
+        "upperMaterial": "Italian Tanned Calfskin & Supple Lining",
+        "midsole": "Ergonomic Memory Foam Core",
+        "outsole": "Vulcanized Low-Profile Rubber",
+        "weight": "340g",
+        "drop": "6mm"
+      },
+      "createdAt": "2026-08-28T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_gravity_high",
+      "name": "BGY Gravity High",
+      "tagline": "Futuristic high-top with ankle lockdown stabilization",
+      "description": "Drawing inspiration from aerospace materials and urban brutalism. The Gravity High anchors the ankle with a padded geometric collar, reinforced red stitching accents, and an energy-returning rocker outsole.",
+      "price": 285,
+      "discountPrice": 255,
+      "images": [
+        "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "High-Tops",
+      "gender": "men",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Shadow & Red",
+          "hex": "#161616"
+        },
+        {
+          "name": "Glacier Grey",
+          "hex": "#D1D5DB"
+        }
+      ],
+      "stock": 9,
+      "rating": 4.9,
+      "numReviews": 41,
+      "reviews": [
+        {
+          "_id": "rev_4",
+          "userId": "usr_cust_4",
+          "userName": "Julian K.",
+          "rating": 5,
+          "title": "Head turner",
+          "comment": "The collar support is unmatched. Materials feel worth $500. Solid BGY statement.",
+          "createdAt": "2026-09-20T13:27:36.360Z"
+        }
+      ],
+      "featured": true,
+      "newArrival": true,
+      "specs": {
+        "upperMaterial": "Ballistic Cordura & Textured Suede Overlays",
+        "midsole": "Dual-Chamber Air Cell Cushion",
+        "outsole": "Multi-directional Hex Lug Rubber",
+        "weight": "410g",
+        "drop": "10mm"
+      },
+      "createdAt": "2026-09-14T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_velocity_evo",
+      "name": "BGY Velocity Evo",
+      "tagline": "Pure performance marathon trainer with explosive rebound",
+      "description": "Engineered for relentless road mileage. Powered by an internal full-length carbon fiber propulsion plate sandwiched between two layers of BGY Float-Matrix foam. The featherweight monofilament upper conforms like a second skin.",
+      "price": 260,
+      "images": [
+        "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Runners",
+      "gender": "men",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Jet Black / BGY Red",
+          "hex": "#0D0D0D"
+        },
+        {
+          "name": "Optic White",
+          "hex": "#F3F4F6"
+        }
+      ],
+      "stock": 32,
+      "rating": 4.9,
+      "numReviews": 63,
+      "reviews": [],
+      "featured": true,
+      "newArrival": true,
+      "specs": {
+        "upperMaterial": "Translucent Monofilament Vapor Weave",
+        "midsole": "Full-Length BGY Carbon Plate + Float-Matrix",
+        "outsole": "Micro-Siped Wet Traction Web",
+        "weight": "210g",
+        "drop": "8mm"
+      },
+      "createdAt": "2026-09-12T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_monolith_x",
+      "name": "BGY Monolith-X",
+      "tagline": "Sculptural exaggerated sole with architectural balance",
+      "description": "Challenging classic footwear proportions. The Monolith-X features a bold faceted geometric midsole that absorbs heavy impact while maintaining surprising lightness. Finished with waterproof bonded technical seams and a laser-etched BGY emblem.",
+      "price": 230,
+      "images": [
+        "https://images.unsplash.com/photo-1560769629-975ec94e6a86?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1575537302964-96cd47c06b1b?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Sneakers",
+      "gender": "women",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Pitch Black",
+          "hex": "#080808"
+        },
+        {
+          "name": "Industrial Slate",
+          "hex": "#4B5563"
+        }
+      ],
+      "stock": 14,
+      "rating": 4.7,
+      "numReviews": 19,
+      "reviews": [],
+      "featured": false,
+      "newArrival": true,
+      "specs": {
+        "upperMaterial": "Bonded Neoprene & Matte TPU Armor",
+        "midsole": "Segmented EVA Sculpture",
+        "outsole": "High-Density Tooth Tread",
+        "weight": "380g",
+        "drop": "7mm"
+      },
+      "createdAt": "2026-09-04T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_apex_carbon",
+      "name": "BGY Apex Carbon",
+      "tagline": "Featherweight track-inspired racer with laser precision",
+      "description": "Designed for sharp city sprints and clean styling. Incorporates real carbon lateral wings that prevent rollover and provide instantaneous directional feedback.",
+      "price": 275,
+      "discountPrice": 245,
+      "images": [
+        "https://images.unsplash.com/photo-1514989940723-e8e51635b782?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Runners",
+      "gender": "men",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Carbon Black / Crimson Accent",
+          "hex": "#1C1917"
+        },
+        {
+          "name": "Silver Storm",
+          "hex": "#9CA3AF"
+        }
+      ],
+      "stock": 8,
+      "rating": 4.9,
+      "numReviews": 29,
+      "reviews": [],
+      "featured": true,
+      "newArrival": false,
+      "specs": {
+        "upperMaterial": "Kevlar Thread Engineered Knit",
+        "midsole": "Carbon Stabilizer Chassis + Pebax Foam",
+        "outsole": "Feather Rubber Pods",
+        "weight": "198g",
+        "drop": "6mm"
+      },
+      "createdAt": "2026-08-23T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_strata_mid",
+      "name": "BGY Strata Mid",
+      "tagline": "Modern mid-cut silhouette tailored with precision panels",
+      "description": "An understated mid-profile height that protects the ankle while maintaining effortless agility. Clean tonal panels and minimalist branding.",
+      "price": 225,
+      "images": [
+        "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "High-Tops",
+      "gender": "women",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Monochrome Black",
+          "hex": "#111827"
+        },
+        {
+          "name": "Off-White Ivory",
+          "hex": "#F3F4F6"
+        }
+      ],
+      "stock": 22,
+      "rating": 4.8,
+      "numReviews": 15,
+      "reviews": [],
+      "featured": false,
+      "newArrival": false,
+      "specs": {
+        "upperMaterial": "Full-Grain Nappa Leather",
+        "midsole": "Cushioned Bio-PU",
+        "outsole": "Non-Marking Solid Rubber",
+        "weight": "360g",
+        "drop": "5mm"
+      },
+      "createdAt": "2026-08-13T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_pulse_hybrid",
+      "name": "BGY Pulse Hybrid",
+      "tagline": "Seamless 3D circular knit slip-on with dynamic tension bands",
+      "description": "No laces required. The Pulse Hybrid wraps the foot in variable compression zones that flex as you sprint or walk. Features an integrated red stabilization bridge on the medial arch.",
+      "price": 195,
+      "images": [
+        "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Slip-Ons",
+      "gender": "women",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Stealth Black",
+          "hex": "#0F172A"
+        },
+        {
+          "name": "Smoke Grey",
+          "hex": "#64748B"
+        }
+      ],
+      "stock": 28,
+      "rating": 4.6,
+      "numReviews": 22,
+      "reviews": [],
+      "featured": false,
+      "newArrival": true,
+      "specs": {
+        "upperMaterial": "3D Recycled Seamless Circular Knit",
+        "midsole": "Adaptive Energy Return Bead Compound",
+        "outsole": "Flexible Hex Grid Sole",
+        "weight": "235g",
+        "drop": "4mm"
+      },
+      "createdAt": "2026-09-16T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_vortex_01",
+      "name": "BGY Vortex 01",
+      "tagline": "Tactical sneaker featuring Fidlock magnetic fast-lock closure",
+      "description": "Designed for rapid transitions and hostile urban environments. Built with weather-sealed zippers, reflective 3M BGY coordinates, and high-traction all-weather lugs.",
+      "price": 290,
+      "images": [
+        "https://images.unsplash.com/photo-1579338559194-a162d19bf842?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Tech-Wear",
+      "gender": "men",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Tactical Shadow",
+          "hex": "#0A0A0A"
+        }
+      ],
+      "stock": 11,
+      "rating": 4.9,
+      "numReviews": 31,
+      "reviews": [],
+      "featured": true,
+      "newArrival": false,
+      "specs": {
+        "upperMaterial": "Water-Repellent DWR Coated Ripstop & GORE-TEX lining",
+        "midsole": "Vibram MegaGrip Compound",
+        "outsole": "Multi-terrain 5mm Aggressive Lug",
+        "weight": "395g",
+        "drop": "9mm"
+      },
+      "createdAt": "2026-08-31T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_shadow_runner",
+      "name": "BGY Shadow Runner",
+      "tagline": "Ultralight nocturnal runner with 360-degree reflectivity",
+      "description": "Subtle by day, luminous under city lights. Engineered for dawn and dusk runners who demand uncompromising style and top tier road protection.",
+      "price": 210,
+      "discountPrice": 185,
+      "images": [
+        "https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Runners",
+      "gender": "women",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Reflective Midnight",
+          "hex": "#18181B"
+        },
+        {
+          "name": "Pure White",
+          "hex": "#FFFFFF"
+        }
+      ],
+      "stock": 19,
+      "rating": 4.7,
+      "numReviews": 18,
+      "reviews": [],
+      "featured": false,
+      "newArrival": false,
+      "specs": {
+        "upperMaterial": "Engineered Engineered Air Mesh with 3M Threads",
+        "midsole": "High-Resilience EVA Foam",
+        "outsole": "Blown Rubber Forefoot",
+        "weight": "240g",
+        "drop": "10mm"
+      },
+      "createdAt": "2026-08-18T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_kinetic_prime",
+      "name": "BGY Kinetic Prime",
+      "tagline": "Asymmetrical speed trainer with targeted lateral support",
+      "description": "The Kinetic Prime rethinks how the foot articulates during explosive training. The asymmetrical lacing relieves instep pressure while the high-rebound forefoot plate stores energy.",
+      "price": 235,
+      "images": [
+        "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Tech-Wear",
+      "gender": "men",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Onyx Red",
+          "hex": "#18181B"
+        },
+        {
+          "name": "Chalk White",
+          "hex": "#F3F4F6"
+        }
+      ],
+      "stock": 16,
+      "rating": 4.8,
+      "numReviews": 27,
+      "reviews": [],
+      "featured": false,
+      "newArrival": true,
+      "specs": {
+        "upperMaterial": "Fused TPU & Micro-Perforated Leather",
+        "midsole": "Kinetic Rebound TPU Core",
+        "outsole": "Directional Siped Gum Rubber",
+        "weight": "310g",
+        "drop": "6mm"
+      },
+      "createdAt": "2026-09-10T13:27:36.360Z"
+    },
+    {
+      "_id": "prod_bgy_zero_grav_slide",
+      "name": "BGY Zero-Grav Slide",
+      "tagline": "Post-workout recovery slide molded in single-piece bio-foam",
+      "description": "Sculpted from a single injection of high-density sugarcane foam. Features an orthotic arch cradle and drainage channels for seamless post-run relaxation and poolside leisure.",
+      "price": 85,
+      "images": [
+        "https://images.unsplash.com/photo-1603808033192-082d6919d3e1?q=80&w=1200&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=1200&auto=format&fit=crop"
+      ],
+      "category": "Slip-Ons",
+      "gender": "women",
+      "sizes": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "colors": [
+        {
+          "name": "Matte Obsidian",
+          "hex": "#111111"
+        },
+        {
+          "name": "Bone",
+          "hex": "#E5E7EB"
+        }
+      ],
+      "stock": 45,
+      "rating": 4.9,
+      "numReviews": 54,
+      "reviews": [],
+      "featured": false,
+      "newArrival": false,
+      "specs": {
+        "upperMaterial": "Single-Shot Injected Bio-EVA Foam",
+        "midsole": "Anatomical Arch Support Bed",
+        "outsole": "High-Friction Water Dispersion Sole",
+        "weight": "160g",
+        "drop": "0mm"
+      },
+      "createdAt": "2026-08-03T13:27:36.360Z"
+    }
+  ],
+  "orders": [
+    {
+      "userId": "usr_mud08d361mt3fr",
+      "userEmail": "niyigenadavid0@gmail.com",
+      "userName": "mpabuka ellie",
+      "products": [
+        {
+          "productId": "prod_bgy_aero_1",
+          "name": "BGY Aero-1 Proto",
+          "image": "https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=1200&auto=format&fit=crop",
+          "price": 210,
+          "size": 7,
+          "color": "Onyx / Crimson",
+          "quantity": 1
+        }
+      ],
+      "shippingAddress": {
+        "fullName": "mpabuka ellie",
+        "phone": "+250 7951395166",
+        "district": "Musanze",
+        "deliveryLocation": "gacuba",
+        "street": "gacuba",
+        "city": "Musanze",
+        "state": "Rwanda",
+        "zip": "0000",
+        "country": "Rwanda"
+      },
+      "shippingMethod": "Rwanda Express Courier",
+      "paymentMethod": "MTN Mobile Money",
+      "subtotal": 210,
+      "shippingCost": 3000,
+      "discount": 0,
+      "total": 3210,
+      "status": "Confirmed",
+      "_id": "ord_mud091ni61dkf0",
+      "orderNumber": "BGY-966092",
+      "createdAt": "2026-09-22T18:26:02.526Z"
+    },
+    {
+      "_id": "ord_sample_1",
+      "orderNumber": "BGY-829104",
+      "userId": "usr_cust_alex",
+      "userEmail": "alex@example.com",
+      "userName": "Alex Mercer",
+      "products": [
+        {
+          "productId": "prod_bgy_aero_1",
+          "name": "BGY Aero-1 Proto",
+          "image": "https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=1200&auto=format&fit=crop",
+          "price": 210,
+          "size": 43,
+          "color": "Onyx / Crimson",
+          "quantity": 1
+        }
+      ],
+      "shippingAddress": {
+        "fullName": "Alex Mercer",
+        "street": "KN 7 Road, Kicukiro",
+        "city": "Kigali",
+        "state": "Kigali City",
+        "zip": "0000",
+        "country": "Rwanda"
+      },
+      "shippingMethod": "Kigali Express Courier",
+      "paymentMethod": "MTN Mobile Money",
+      "subtotal": 210,
+      "shippingCost": 15,
+      "discount": 0,
+      "total": 225,
+      "status": "Delivered",
+      "createdAt": "2026-09-18T13:27:36.626Z"
+    }
+  ],
+  "contactMessages": [
+    {
+      "_id": "msg_1",
+      "name": "Julian Vance",
+      "email": "julian@studio.design",
+      "phone": "+250 788 201 998",
+      "message": "Interested in a footwear retail partnership in Kigali.",
+      "createdAt": "2026-09-20T13:27:36.626Z"
+    }
+  ]
+}

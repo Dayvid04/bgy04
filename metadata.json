@@ -1,0 +1,6 @@
+{
+  "name": "BGY",
+  "description": "Modern Footwear & High-Performance Footwear Brand. Distinct identity, minimal aesthetics, and premium craft.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
