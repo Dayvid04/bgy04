@@ -60,6 +60,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     }
   } else {
     data = await res.text();
+    if (res.ok) {
+      throw new ApiError('The API returned an unexpected response. Check the API URL and backend deployment.', res.status, data);
+    }
   }
 
   if (!res.ok) {

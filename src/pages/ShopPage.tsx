@@ -37,6 +37,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
   const [activeGender, setActiveGender] = useState<'all' | 'men' | 'women'>(initialGender || 'all');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   const [search, setSearch] = useState(initialSearch);
@@ -63,6 +64,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
 
   const fetchProducts = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const params: Record<string, any> = {
         gender: newArrivalsOnly || activeGender === 'all' ? undefined : activeGender,
@@ -73,12 +75,17 @@ export const ShopPage: React.FC<ShopPageProps> = ({
         color: selectedColor || undefined,
       };
       const res = await api.getProducts(params);
+      if (!Array.isArray(res?.products)) throw new Error('Invalid product response');
       setProducts(res.products);
       const allRes = await api.getProducts(newArrivalsOnly ? {} : activeGender === 'all' ? {} : { gender: activeGender });
-      const cats = Array.from(new Set(allRes.products.map((p: any) => p.category))) as string[];
+      if (!Array.isArray(allRes?.products)) throw new Error('Invalid category response');
+      const cats = Array.from(new Set(allRes.products.map((product: Product) => product.category).filter(Boolean))) as string[];
       setCategories(['All', ...cats.sort()]);
     } catch (err) {
       console.error('Error loading shop products:', err);
+      setProducts([]);
+      setCategories(['All']);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -304,6 +311,19 @@ export const ShopPage: React.FC<ShopPageProps> = ({
               <div className="py-32 text-center text-neutral-500 font-mono text-xs flex items-center justify-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#E50914] animate-ping" />
                 Loading {activeGender === 'men' ? "Men's" : "Women's"} collection...
+              </div>
+            ) : loadError ? (
+              <div role="alert" className="py-24 text-center p-8 border border-dashed border-neutral-800 rounded-2xl">
+                <p className="font-display font-bold text-lg text-white mb-2">Collection unavailable</p>
+                <p className="text-xs text-neutral-400 max-w-sm mx-auto mb-6">
+                  We couldn’t load this collection. Please try again shortly.
+                </p>
+                <button
+                  onClick={fetchProducts}
+                  className="px-6 py-2.5 rounded-full bg-white text-black hover:bg-neutral-200 text-xs font-mono uppercase tracking-widest font-bold transition-colors"
+                >
+                  Try Again
+                </button>
               </div>
             ) : products.length > 0 ? (
               <div className="product-grid">

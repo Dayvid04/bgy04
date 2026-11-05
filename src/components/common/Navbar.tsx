@@ -255,7 +255,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <button
                 onClick={openCart}
-                className="hidden md:flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white relative transition-colors"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-[#E50914] hover:text-[#E50914] relative transition-colors"
                 aria-label={`${t('nav.cart')}${itemCount > 0 ? `, ${pluralize(itemCount, 'item')}` : ''}`}
               >
                 <ShoppingBag className="w-4 h-4" />
@@ -268,9 +268,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => setUserDropdownOpen(v => !v)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
-                  aria-label="User menu"
+                  onClick={() => {
+                    if (isAuthenticated) setUserDropdownOpen(v => !v);
+                    else openAuthModal('login');
+                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-[#E50914] hover:text-[#E50914] transition-colors"
+                  aria-label={isAuthenticated ? 'User menu' : t('nav.signIn')}
                   aria-expanded={userDropdownOpen}
                   aria-haspopup="menu"
                 >

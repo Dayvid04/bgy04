@@ -159,15 +159,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectProduct 
 
       {content.showMenSection && <section id="mens-section" className="py-16 sm:py-20 border-t border-neutral-900 bg-[#080808]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
+          <div className="mb-8">
             <div>
               <span className="text-xs font-mono uppercase tracking-[0.25em] text-[#E50914] block mb-2">{content.menEyebrow}</span>
               <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white tracking-tight">{content.menTitle}</h2>
               <p className="text-sm text-neutral-400 mt-2 max-w-md">{content.menDescription}</p>
             </div>
-            <button onClick={() => onNavigate('shop', 'men')} className="mt-6 sm:mt-0 px-6 py-3 rounded-full bg-neutral-900 border border-neutral-800 hover:border-neutral-600 text-xs font-mono uppercase tracking-widest text-white transition-colors flex items-center gap-2">
-              {content.menButtonText} <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
           {loading ? (
             <div className="py-24 text-center text-neutral-500 font-mono text-xs flex items-center justify-center gap-2"><span className="w-2 h-2 rounded-full bg-[#E50914] animate-ping" />Loading...</div>
@@ -179,15 +176,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectProduct 
 
       {content.showWomenSection && <section id="womens-section" className="py-16 sm:py-20 border-t border-neutral-900 bg-[#080808]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
+          <div className="mb-8">
             <div>
               <span className="text-xs font-mono uppercase tracking-[0.25em] text-[#E50914] block mb-2">{content.womenEyebrow}</span>
               <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white tracking-tight">{content.womenTitle}</h2>
               <p className="text-sm text-neutral-400 mt-2 max-w-md">{content.womenDescription}</p>
             </div>
-            <button onClick={() => onNavigate('shop', 'women')} className="mt-6 sm:mt-0 px-6 py-3 rounded-full bg-neutral-900 border border-neutral-800 hover:border-neutral-600 text-xs font-mono uppercase tracking-widest text-white transition-colors flex items-center gap-2">
-              {content.womenButtonText} <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
           {loading ? (
             <div className="py-24 text-center text-neutral-500 font-mono text-xs flex items-center justify-center gap-2"><span className="w-2 h-2 rounded-full bg-[#E50914] animate-ping" />Loading...</div>

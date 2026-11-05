@@ -206,10 +206,10 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               Storefront Recovery
             </span>
             <h1 className="font-display font-black text-2xl tracking-tight mb-2">
-              Session Resynchronized
+              Storefront couldn’t load
             </h1>
             <p className="text-xs font-mono text-neutral-400 leading-relaxed mb-6">
-              A temporary initialization or authentication state discrepancy was safely intercepted. Your bag and local preferences remain intact.
+              Something went wrong while opening this page. Your bag and local preferences remain intact.
             </p>
             <button
               onClick={this.handleReset}

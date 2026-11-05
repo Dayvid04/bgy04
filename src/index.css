@@ -178,6 +178,16 @@ html.light {
 /* ═══════════════════════════════════════════════════════════════
    NAVBAR
 ═══════════════════════════════════════════════════════════════ */
+.bgy-letter {
+  fill: #050505;
+  transition: fill 180ms ease;
+  cursor: pointer;
+}
+
+.bgy-letter:hover {
+  fill: #e50914;
+}
+
 
 /*
   Expose the header height as a CSS custom property so the mobile
