@@ -6,13 +6,15 @@ import { api } from '../services/api';
 import { ProductCard } from '../components/product/ProductCard';
 import { QuickViewModal } from '../components/product/QuickViewModal';
 import { useLanguage } from '../context/LanguageContext';
+import { pluralize } from '../utils/pluralize';
 
 interface ShopPageProps {
   onSelectProduct: (productId: string) => void;
+  onNavigateToCheckout: () => void;
   initialCategory?: string;
   initialSearch?: string;
   newArrivalsOnly?: boolean;
-  initialGender?: 'men' | 'women';
+  initialGender?: 'all' | 'men' | 'women';
 }
 
 const SIZES = [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45];
@@ -26,12 +28,13 @@ const COLORS = [
 
 export const ShopPage: React.FC<ShopPageProps> = ({
   onSelectProduct,
+  onNavigateToCheckout,
   initialCategory = 'All',
   initialSearch = '',
   newArrivalsOnly = false,
   initialGender,
 }) => {
-  const [activeGender, setActiveGender] = useState<'men' | 'women'>(initialGender || 'men');
+  const [activeGender, setActiveGender] = useState<'all' | 'men' | 'women'>(initialGender || 'all');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
@@ -62,7 +65,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
     setLoading(true);
     try {
       const params: Record<string, any> = {
-        gender: newArrivalsOnly ? undefined : activeGender,
+        gender: newArrivalsOnly || activeGender === 'all' ? undefined : activeGender,
         newArrival: newArrivalsOnly ? true : undefined,
         category: selectedCategory !== 'All' ? selectedCategory : undefined,
         search: search.trim() || undefined,
@@ -71,8 +74,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
       };
       const res = await api.getProducts(params);
       setProducts(res.products);
-      // Build category list from all products of this gender
-      const allRes = await api.getProducts(newArrivalsOnly ? {} : { gender: activeGender });
+      const allRes = await api.getProducts(newArrivalsOnly ? {} : activeGender === 'all' ? {} : { gender: activeGender });
       const cats = Array.from(new Set(allRes.products.map((p: any) => p.category))) as string[];
       setCategories(['All', ...cats.sort()]);
     } catch (err) {
@@ -112,7 +114,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search shoes..."
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600"
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-8 pr-3 py-2 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-600"
           />
           {search && (
             <button onClick={() => setSearch('')} className="absolute right-2.5 top-2.5 text-neutral-500 hover:text-white">
@@ -173,7 +175,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-28 pb-20 select-none">
+    <div className="min-h-[100dvh] bg-[#050505] text-white pt-[calc(var(--header-height)+1rem)] md:pt-28 pb-20 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Page Header */}
@@ -183,7 +185,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
             <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
               <div className="lg:col-span-7">
                 <span className="mb-4 block text-xs font-mono uppercase tracking-[0.25em] text-[#E50914]">BGY Footwear · Just Landed</span>
-                <h1 className="font-display text-6xl font-black leading-[0.82] tracking-tighter text-white sm:text-7xl lg:text-8xl">
+                <h1 className="font-display text-fluid-h1 font-black leading-[0.82] tracking-tighter text-white">
                   Fresh pairs.<br />
                   <span className="text-[#E50914]">New energy.</span>
                 </h1>
@@ -193,7 +195,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
                   The newest BGY releases, selected for movement, daily wear, and confident style across Rwanda.
                 </p>
                 <div className="mt-6 flex items-center gap-6 border-t border-neutral-800 pt-4 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
-                  <span><strong className="text-white">{products.length}</strong> new pairs</span>
+                  <span>{pluralize(products.length, 'new pair', 'new pairs')}</span>
                   <span className="h-3 w-px bg-neutral-800" />
                   <span>Eur 35–45</span>
                 </div>
@@ -204,12 +206,12 @@ export const ShopPage: React.FC<ShopPageProps> = ({
           <div className="mb-8 grid grid-cols-1 lg:grid-cols-12 gap-8 border-b border-neutral-900 pb-8">
             <div className="lg:col-span-7">
               <span className="text-xs font-mono uppercase tracking-[0.25em] text-[#E50914] block mb-3">BGY Footwear · Full Collection</span>
-              <h1 className="font-display font-black text-5xl sm:text-6xl lg:text-7xl tracking-tighter leading-[0.9] text-white">Every pair.<br /><span className="text-neutral-500">New vibe.</span></h1>
+              <h1 className="font-display font-black text-fluid-h1 tracking-tighter leading-[0.9] text-white">Every pair.<br /><span className="text-neutral-500">New vibe.</span></h1>
             </div>
             <div className="lg:col-span-5 lg:pt-5">
               <p className="max-w-md text-sm leading-relaxed text-neutral-400">Browse the complete BGY footwear catalog for men and women, with every available pair in one place.</p>
               <div className="mt-5 flex items-center gap-6 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
-                <span><strong className="text-white">{products.length}</strong> available pairs</span>
+                <span>{pluralize(products.length, 'available pair', 'available pairs')}</span>
                 <span className="h-3 w-px bg-neutral-800" />
                 <span>Eur 35–45</span>
               </div>
@@ -218,18 +220,18 @@ export const ShopPage: React.FC<ShopPageProps> = ({
         )}
 
         {/* MEN / WOMEN Gender Tabs */}
-        {!newArrivalsOnly && <div className="flex items-center gap-2 mb-8">
-          {(['men', 'women'] as const).map(g => (
+        {!newArrivalsOnly && <div className="flex items-center gap-2 mb-8 flex-wrap">
+          {(['all', 'men', 'women'] as const).map(g => (
             <button
               key={g}
               onClick={() => setActiveGender(g)}
-              className={`relative px-8 py-3 rounded-xl text-sm font-display font-bold uppercase tracking-widest transition-all ${
+              className={`relative px-6 py-3 rounded-xl text-sm font-display font-bold uppercase tracking-widest transition-all ${
                 activeGender === g
                   ? 'bg-white text-black shadow-lg'
                   : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800 hover:border-neutral-600'
               }`}
             >
-              {g === 'men' ? "Men's" : "Women's"}
+              {g === 'all' ? 'All' : g === 'men' ? "Men's" : "Women's"}
               {activeGender === g && (
                 <motion.span
                   layoutId="genderUnderline"
@@ -259,7 +261,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
 
         {/* Results + Mobile Filter Row */}
         <div className="flex items-center justify-between mb-6">
-          <span className="text-xs font-mono text-neutral-500">{products.length} styles</span>
+          <span className="text-xs font-mono text-neutral-500">{pluralize(products.length, 'style')}</span>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileFilterOpen(true)}
@@ -304,9 +306,9 @@ export const ShopPage: React.FC<ShopPageProps> = ({
                 Loading {activeGender === 'men' ? "Men's" : "Women's"} collection...
               </div>
             ) : products.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="product-grid">
                 {products.map(prod => (
-                  <ProductCard key={prod._id} product={prod} onSelect={onSelectProduct} onQuickView={setQuickViewProduct} />
+                  <ProductCard key={prod._id} product={prod} onSelect={onSelectProduct} onQuickView={setQuickViewProduct} onBuyNow={onNavigateToCheckout} />
                 ))}
               </div>
             ) : (
@@ -336,9 +338,10 @@ export const ShopPage: React.FC<ShopPageProps> = ({
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setMobileFilterOpen(false)}
             />
-            <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="fixed inset-y-0 right-0 max-w-full flex pl-10" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
               <motion.div
                 className="w-screen max-w-sm bg-[#0a0a0a] border-l border-neutral-800 p-6 flex flex-col justify-between text-white"
+                style={{ height: '100dvh' }}
                 initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               >
                 <div>
@@ -364,7 +367,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
         )}
       </AnimatePresence>
 
-      <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} onViewFullDetails={onSelectProduct} />
+      <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewProduct(null)} onViewFullDetails={onSelectProduct} onBuyNow={onNavigateToCheckout} />
     </div>
   );
 };

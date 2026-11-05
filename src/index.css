@@ -98,7 +98,8 @@ html.light {
     font-family: var(--font-body);
     background-color: var(--bg-base);
     color: var(--text-primary);
-    overflow-x: hidden;
+    /* overflow-x:hidden masks real overflow bugs — removed.
+       Horizontal scroll is prevented structurally instead. */
   }
 
   h1, h2, h3, .font-display {
@@ -177,6 +178,26 @@ html.light {
 /* ═══════════════════════════════════════════════════════════════
    NAVBAR
 ═══════════════════════════════════════════════════════════════ */
+
+/*
+  Expose the header height as a CSS custom property so the mobile
+  drawer can position itself exactly below the bar at any scroll
+  state without hard-coding a pixel value in JS.
+  py-5  → 20px top + 20px bottom + ~32px content  ≈ 72px
+  py-3.5→ 14px top + 14px bottom + ~32px content  ≈ 60px
+  We use 72px as the safe default; the drawer uses it via
+  calc(var(--header-height, 72px) + 8px).
+*/
+:root {
+  --header-height: calc(108px + env(safe-area-inset-top, 0px));
+}
+
+@media (min-width: 768px) {
+  :root {
+    --header-height: calc(84px + env(safe-area-inset-top, 0px));
+  }
+}
+
 header {
   background-color: transparent;
 }
@@ -281,4 +302,74 @@ html.light .bg-\[\#E50914\]\/\[0\.08\] {
 [style*="opacity"],
 [data-projection-id] {
   transition: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SAFE-AREA UTILITIES
+═══════════════════════════════════════════════════════════════ */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REDUCED MOTION
+═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOUCH TARGET MINIMUM (44×44 px per WCAG 2.5.5)
+   Applied to icon-only buttons that are too small by default.
+═══════════════════════════════════════════════════════════════ */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FLUID TYPOGRAPHY SCALE
+═══════════════════════════════════════════════════════════════ */
+.text-fluid-hero {
+  font-size: clamp(1.75rem, 6.5vw + 0.1rem, 5.2rem);
+  line-height: 0.92;
+}
+.text-fluid-h1 {
+  font-size: clamp(2rem, 6vw + 0.5rem, 5rem);
+  line-height: 0.9;
+}
+.text-fluid-h2 {
+  font-size: clamp(1.5rem, 4vw + 0.25rem, 2.5rem);
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.625rem, 1.5vw, 1.25rem);
+}
+
+@media (min-width: 640px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PREVENT HORIZONTAL OVERFLOW GLOBALLY
+═══════════════════════════════════════════════════════════════ */
+html, body {
+  max-width: 100%;
 }

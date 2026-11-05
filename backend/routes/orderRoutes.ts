@@ -1,11 +1,12 @@
 import { Router, Response } from 'express';
 import { db } from '../db.js';
 import { authenticateUser, optionalUser, AuthRequest } from '../auth.js';
+import { asyncHandler } from '../http.js';
 
 const router = Router();
 
 // Create new order (can be authenticated or guest)
-router.post('/', optionalUser, (req: AuthRequest, res: Response) => {
+router.post('/', asyncHandler(optionalUser), asyncHandler(async (req: AuthRequest, res: Response) => {
   const {
     products,
     shippingAddress,
@@ -28,12 +29,11 @@ router.post('/', optionalUser, (req: AuthRequest, res: Response) => {
     return res.status(400).json({ error: 'Complete delivery address is required (Full Name, District, Delivery Location).' });
   }
 
-  // Validate items and verify inventory
   let subtotal = 0;
   const verifiedProducts = [];
 
   for (const item of products) {
-    const prod = db.findProductById(item.productId);
+    const prod = await db.findProductById(item.productId);
     if (!prod) {
       return res.status(400).json({ error: `Product ${item.name || item.productId} is no longer available.` });
     }
@@ -55,7 +55,6 @@ router.post('/', optionalUser, (req: AuthRequest, res: Response) => {
     });
   }
 
-  // Rwanda delivery: Free over 50,000 RWF, otherwise 3,000 RWF
   const defaultShipping = subtotal >= 50000 ? 0 : 3000;
   const shippingCost = req.body.shippingCost !== undefined ? Number(req.body.shippingCost) : defaultShipping;
   const discount = req.body.discount ? Number(req.body.discount) : 0;
@@ -69,7 +68,7 @@ router.post('/', optionalUser, (req: AuthRequest, res: Response) => {
   const deliveryLocation = (shippingAddress.deliveryLocation || shippingAddress.street || '').trim();
   const phone = (shippingAddress.phone || customerInfo?.phone || '').trim();
 
-  const newOrder = db.createOrder({
+  const newOrder = await db.createOrder({
     userId,
     userEmail,
     userName,
@@ -94,28 +93,27 @@ router.post('/', optionalUser, (req: AuthRequest, res: Response) => {
     status: 'Confirmed'
   });
 
-  res.status(201).json(newOrder);
-});
+  return res.status(201).json(newOrder);
+}));
 
 // Get user orders
-router.get('/my-orders', authenticateUser, (req: AuthRequest, res: Response) => {
-  const orders = db.getUserOrders(req.user!._id);
-  res.json(orders);
-});
+router.get('/my-orders', asyncHandler(authenticateUser), asyncHandler(async (req: AuthRequest, res: Response) => {
+  const orders = await db.getUserOrders(req.user!._id);
+  return res.json(orders);
+}));
 
 // Get single order by ID or orderNumber
-router.get('/:id', optionalUser, (req: AuthRequest, res: Response) => {
-  const order = db.findOrderById(req.params.id);
+router.get('/:id', asyncHandler(authenticateUser), asyncHandler(async (req: AuthRequest, res: Response) => {
+  const order = await db.findOrderById(req.params.id);
   if (!order) {
     return res.status(404).json({ error: 'Order not found.' });
   }
 
-  // Security check: if user is logged in, ensure they own it or are admin
-  if (req.user && req.user.role !== 'admin' && order.userId !== req.user._id) {
+  if (req.user!.role !== 'admin' && order.userId !== req.user!._id) {
     return res.status(403).json({ error: 'Unauthorized to view this order.' });
   }
 
-  res.json(order);
-});
+  return res.json(order);
+}));
 
 export default router;

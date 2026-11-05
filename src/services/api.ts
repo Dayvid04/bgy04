@@ -1,6 +1,6 @@
-import { Product, User, Order, AdminStats, Review } from '../types';
+import { Product, User, Order, AdminStats, Review, SiteContent } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') + '/api';
 
 export class ApiError extends Error {
   status: number;
@@ -13,31 +13,19 @@ export class ApiError extends Error {
   }
 }
 
-function getAuthToken(): string | null {
-  try {
-    return localStorage.getItem('bgy_token');
-  } catch {
-    return null;
-  }
-}
-
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = getAuthToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'bypass-tunnel-reminder': 'true',
     ...(options.headers as Record<string, string> || {}),
   };
 
-  if (token && !headers['Authorization']) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   let res: Response;
   try {
     res = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       headers,
+      credentials: 'include',
     });
   } catch (networkError: any) {
     console.warn(`Network error requesting ${endpoint}:`, networkError);
@@ -46,11 +34,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   // Handle 401 Unauthorized globally: clear stale credentials & notify state
   if (res.status === 401) {
-    try {
-      localStorage.removeItem('bgy_token');
-    } catch {
-      // ignore
-    }
     window.dispatchEvent(new CustomEvent('bgy:unauthorized', { detail: { endpoint } }));
 
     // For profile check (/auth/me), return null user instead of throwing fatal error
@@ -89,18 +72,22 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   // --- Auth ---
-  async login(credentials: { email: string; password: string }): Promise<{ user: User; token: string }> {
-    return request<{ user: User; token: string }>('/auth/login', {
+  async login(credentials: { email: string; password: string }): Promise<{ user: User }> {
+    return request<{ user: User }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
   },
 
-  async register(userInfo: { name: string; email: string; password: string; phone?: string }): Promise<{ user: User; token: string }> {
-    return request<{ user: User; token: string }>('/auth/register', {
+  async register(userInfo: { name: string; email: string; password: string; phone?: string }): Promise<{ user: User }> {
+    return request<{ user: User }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userInfo),
     });
+  },
+
+  async logout(): Promise<void> {
+    await request('/auth/logout', { method: 'POST' });
   },
 
   async getMe(): Promise<{ user: User | null }> {
@@ -124,6 +111,14 @@ export const api = {
     }
     const qs = query.toString();
     return request<{ total: number; products: Product[] }>(`/products${qs ? `?${qs}` : ''}`);
+  },
+
+  async getSiteContent(): Promise<SiteContent> {
+    return request<SiteContent>('/content');
+  },
+
+  async getAdminSiteContent(): Promise<SiteContent> {
+    return request<SiteContent>('/admin/content');
   },
 
   async getProductById(id: string): Promise<Product> {
@@ -198,6 +193,24 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ role }),
     });
+  },
+
+  async setUserActive(userId: string, active: boolean): Promise<{ _id: string; active: boolean }> {
+    return request<{ _id: string; active: boolean }>(`/admin/users/${userId}/active`, {
+      method: 'PUT',
+      body: JSON.stringify({ active }),
+    });
+  },
+
+  async updateSiteContent(content: SiteContent): Promise<SiteContent> {
+    return request<SiteContent>('/admin/content', {
+      method: 'PUT',
+      body: JSON.stringify(content),
+    });
+  },
+
+  async getAdminAudit(): Promise<Array<{ id: number; adminName: string; action: string; entity: string; details: unknown; createdAt: string }>> {
+    return request('/admin/content/audit');
   },
 
   async createAdminProduct(productData: any): Promise<Product> {

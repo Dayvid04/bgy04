@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Lock, Mail, User as UserIcon, Phone, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { BgyLogo } from '../common/BgyLogo';
 
 export const AuthModal: React.FC = () => {
+  const { t } = useLanguage();
   const {
     isAuthModalOpen,
     closeAuthModal,
@@ -19,12 +21,24 @@ export const AuthModal: React.FC = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const clearForm = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setName('');
+    setPhone('');
+    setError(null);
+    setFieldErrors({});
+  };
 
   // Sync mode if changed from context
   React.useEffect(() => {
     setMode(authModalMode);
-    setError(null);
+    clearForm();
   }, [authModalMode, isAuthModalOpen]);
 
   if (!isAuthModalOpen) return null;
@@ -32,6 +46,30 @@ export const AuthModal: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    const nextFieldErrors: Record<string, string> = {};
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) nextFieldErrors.email = 'Email is required.';
+    else if (normalizedEmail !== 'admin' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) nextFieldErrors.email = 'Enter a valid email address.';
+    if (!password) nextFieldErrors.password = 'Password is required.';
+
+    if (mode === 'register') {
+      if (!name.trim()) nextFieldErrors.name = 'Full name is required.';
+      else if (name.trim().length < 2 || name.trim().length > 80) nextFieldErrors.name = 'Name must be between 2 and 80 characters.';
+      if (normalizedEmail === 'admin') nextFieldErrors.email = 'This email is reserved for the static admin account.';
+      if (password.length < 12) nextFieldErrors.password = 'Use at least 12 characters.';
+      if (password.length > 128) nextFieldErrors.password = 'Password must be 128 characters or fewer.';
+      if (password !== confirmPassword) nextFieldErrors.confirmPassword = 'Passwords do not match.';
+
+      const normalizedPhone = phone.trim();
+      if (normalizedPhone && (!/^\d+$/.test(normalizedPhone) || normalizedPhone.length > 10)) {
+        nextFieldErrors.phone = 'Phone number must contain only digits and cannot exceed 10 numbers.';
+      }
+    }
+
+    setFieldErrors(nextFieldErrors);
+    if (Object.keys(nextFieldErrors).length > 0) return;
+
     setLoading(true);
 
     try {
@@ -40,8 +78,15 @@ export const AuthModal: React.FC = () => {
       } else {
         await register(name, email, password, phone);
       }
+      clearForm();
     } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please check credentials.');
+      if (mode === 'login') {
+        setFieldErrors({ password: 'Invalid email or password. Please try again.' });
+      } else if (err.status === 409) {
+        setFieldErrors({ email: 'An account with this email already exists.' });
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -61,7 +106,8 @@ export const AuthModal: React.FC = () => {
 
         {/* Modal Card */}
         <motion.div
-          className="relative w-full max-w-md bg-[#0D0D0D] border border-neutral-800 rounded-2xl shadow-2xl p-6 sm:p-8 text-white z-10 overflow-hidden"
+          className="relative w-full max-w-md bg-[#0D0D0D] border border-neutral-800 rounded-2xl shadow-2xl p-6 sm:p-8 text-white z-10 overflow-y-auto"
+          style={{ maxHeight: 'min(90dvh, 700px)' }}
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -99,7 +145,7 @@ export const AuthModal: React.FC = () => {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
             {mode === 'register' && (
               <>
                 <div>
@@ -112,11 +158,14 @@ export const AuthModal: React.FC = () => {
                       type="text"
                       required
                       value={name}
+                      autoComplete="name"
+                      aria-invalid={Boolean(fieldErrors.name)}
                       onChange={e => setName(e.target.value)}
-                      placeholder="Enter your names.."
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500"
+                      placeholder={t('auth.namePlaceholder')}
+                      className={`w-full bg-neutral-900 border rounded-xl pl-9 pr-3 py-2.5 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 ${fieldErrors.name ? 'border-red-500' : 'border-neutral-800'}`}
                     />
                   </div>
+                  {fieldErrors.name && <p className="mt-1 text-xs text-red-400" role="alert">{fieldErrors.name}</p>}
                 </div>
 
                 <div>
@@ -127,12 +176,15 @@ export const AuthModal: React.FC = () => {
                     <Phone className="w-4 h-4 text-neutral-500 absolute left-3 top-3" />
                     <input
                       type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
                       value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      placeholder="+250 788 000 000"
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500"
+                      onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="0788000000"
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-3 py-2.5 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500"
                     />
                   </div>
+                  {fieldErrors.phone && <p className="mt-1 text-xs text-red-400" role="alert">{fieldErrors.phone}</p>}
                 </div>
               </>
             )}
@@ -144,14 +196,17 @@ export const AuthModal: React.FC = () => {
               <div className="relative">
                 <Mail className="w-4 h-4 text-neutral-500 absolute left-3 top-3" />
                 <input
-                  type={mode === 'login' ? 'text' : 'email'}
+                  type="email"
                   required
                   value={email}
+                  autoComplete="email"
                   onChange={e => setEmail(e.target.value)}
                   placeholder="bgy@gmail.com"
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500"
+                  aria-invalid={Boolean(fieldErrors.email)}
+                  className={`w-full bg-neutral-900 border rounded-xl pl-9 pr-3 py-2.5 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 ${fieldErrors.email ? 'border-red-500' : 'border-neutral-800'}`}
                 />
               </div>
+              {fieldErrors.email && <p className="mt-1 text-xs text-red-400" role="alert">{fieldErrors.email}</p>}
             </div>
 
             <div>
@@ -163,14 +218,37 @@ export const AuthModal: React.FC = () => {
                 <input
                   type="password"
                   required
-                  minLength={mode === 'register' ? 6 : undefined}
+                  maxLength={mode === 'register' ? 128 : undefined}
                   value={password}
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500"
+                  placeholder={mode === 'register' ? 'At least 12 characters' : 'Password'}
+                  aria-invalid={Boolean(fieldErrors.password)}
+                  className={`w-full bg-neutral-900 border rounded-xl pl-9 pr-3 py-2.5 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 ${fieldErrors.password ? 'border-red-500' : 'border-neutral-800'}`}
                 />
               </div>
+              {fieldErrors.password && <p className="mt-1 text-xs text-red-400" role="alert">{fieldErrors.password}</p>}
             </div>
+
+            {mode === 'register' && (
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-neutral-400 mb-1">Confirm Password</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-neutral-500 absolute left-3 top-3" />
+                  <input
+                    type="password"
+                    required
+                    maxLength={128}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    aria-invalid={Boolean(fieldErrors.confirmPassword)}
+                    className={`w-full bg-neutral-900 border rounded-xl pl-9 pr-3 py-2.5 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 ${fieldErrors.confirmPassword ? 'border-red-500' : 'border-neutral-800'}`}
+                  />
+                </div>
+                {fieldErrors.confirmPassword && <p className="mt-1 text-xs text-red-400" role="alert">{fieldErrors.confirmPassword}</p>}
+              </div>
+            )}
 
             <button
               type="submit"
@@ -199,7 +277,7 @@ export const AuthModal: React.FC = () => {
               <p>
                 Don't have an account?{' '}
                 <button
-                  onClick={() => setMode('register')}
+                  onClick={() => { clearForm(); setMode('register'); }}
                   className="text-white hover:text-[#E50914] font-semibold underline underline-offset-4 transition-colors ml-1"
                 >
                   Join BGY
@@ -209,7 +287,7 @@ export const AuthModal: React.FC = () => {
               <p>
                 Already have an account?{' '}
                 <button
-                  onClick={() => setMode('login')}
+                  onClick={() => { clearForm(); setMode('login'); }}
                   className="text-white hover:text-[#E50914] font-semibold underline underline-offset-4 transition-colors ml-1"
                 >
                   Sign In

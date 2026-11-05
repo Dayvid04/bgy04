@@ -47,16 +47,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         />
 
         {/* Drawer Panel */}
-        <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+        <div className="fixed inset-y-0 right-0 max-w-full flex pl-10" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           <motion.div
             className="w-screen max-w-md bg-[#0a0a0a] border-l border-neutral-800 text-white flex flex-col shadow-2xl"
+            style={{ height: '100dvh' }}
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 240 }}
           >
             {/* Top Header */}
-            <div className="p-6 border-b border-neutral-800/80 flex items-center justify-between">
+            <div className="p-4 sm:p-6 border-b border-neutral-800/80 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-[#E50914]" />
                 <h3 className="font-display text-lg font-bold tracking-tight">{t('cart.title')}</h3>
@@ -72,13 +73,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </button>
             </div>
 
-            {/* Delivery policy */}
-            <div className="px-6 py-3 bg-neutral-900/60 border-b border-neutral-800 text-xs">
-              <span className="text-neutral-300 font-mono">Wednesday & Saturday delivery in Rubavu and Kigali for a small transport fee. Other provinces use public-transport courier delivery at the buyer's risk.</span>
-            </div>
-
             {/* Items List */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-4">
                   <div className="w-16 h-16 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-4">
@@ -102,12 +98,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 cart.map(item => (
                   <div
                     key={`${item.productId}-${item.size}-${item.color}`}
-                    className="flex gap-4 p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800/80 group"
+                    className="flex gap-3 sm:gap-4 p-3 sm:p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800/80 group"
                   >
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="w-20 h-20 object-cover rounded-lg bg-black border border-neutral-800 shrink-0"
+                      className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg bg-black border border-neutral-800 shrink-0"
                     />
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div>
@@ -156,7 +152,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* Promo Code & Summary Footer */}
             {cart.length > 0 && (
-              <div className="p-6 border-t border-neutral-800 bg-[#080808]">
+              <div className="p-4 sm:p-6 border-t border-neutral-800 bg-[#080808]" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
                 {/* Promo input */}
                 <div className="mb-4">
                   {appliedPromo ? (

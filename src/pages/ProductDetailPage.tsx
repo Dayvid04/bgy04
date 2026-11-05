@@ -9,16 +9,14 @@ import {
   RotateCcw,
   Ruler,
   Check,
-  Sparkles,
   ArrowLeft,
-  Eye,
 } from 'lucide-react';
 import { Product } from '../types';
 import { api } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Shoe3DViewer } from '../components/common/Shoe3DViewer';
+import { useProductSelection } from '../context/ProductSelectionContext';
 
 interface ProductDetailPageProps {
   productId: string;
@@ -34,16 +32,17 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const { t, formatCurrency, language } = useLanguage();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'gallery' | '3d'>('gallery');
 
   // Interactive selection state
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [selectedColor, setSelectedColor] = useState<string>('');
-  const [selectedSize, setSelectedSize] = useState<number | null>(null);
+  const { selectedColor, selectedSize, selectedSizes, setSelectedColor, setSelectedSize, setSelectedSizes } = useProductSelection(
+    productId,
+    product?.colors[0]?.name || 'Standard'
+  );
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
 
-  const { addToCart, openCart } = useCart();
+  const { addToCart, closeCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   useEffect(() => {
@@ -53,8 +52,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         const prod = await api.getProductById(productId);
         setProduct(prod);
         setSelectedImageIndex(0);
-        setSelectedColor(prod.colors[0]?.name || 'Standard');
-        setSelectedSize(prod.sizes[0] || null);
       } catch (err) {
         console.error('Error fetching product details:', err);
       } finally {
@@ -67,17 +64,17 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center font-mono text-xs">
+      <div className="min-h-[100dvh] bg-[#050505] text-white flex items-center justify-center font-mono text-xs">
         <span className="w-2 h-2 rounded-full bg-[#E50914] animate-ping mr-3" />
-        Retrieving BGY footwear architecture...
+        {language === 'fr' ? 'Chargement du modèle BGY...' : 'Retrieving BGY footwear architecture...'}
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center pt-24 pb-16 px-4">
-        <p className="text-lg font-display font-bold mb-4">Footwear Silhouette Not Found</p>
+      <div className="min-h-[100dvh] bg-[#050505] text-white flex flex-col items-center justify-center pt-24 pb-16 px-4">
+        <p className="text-lg font-display font-bold mb-4">{language === 'fr' ? 'Modèle introuvable' : 'Footwear Silhouette Not Found'}</p>
         <button
           onClick={() => onNavigate('shop')}
           className="px-6 py-2.5 rounded-full bg-white text-black font-mono text-xs uppercase tracking-widest font-bold"
@@ -91,33 +88,53 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const isSaved = isInWishlist(product._id);
   const finalPrice = product.discountPrice || product.price;
 
-  const handleAddToCart = () => {
-    if (!selectedSize) return;
+  const addSelectedSizesToCart = () => {
+    const sizesToAdd = Object.entries(selectedSizes).filter(([, quantity]) => quantity > 0);
+    if (sizesToAdd.length === 0 && selectedSize) sizesToAdd.push([String(selectedSize), 1]);
+    if (sizesToAdd.length === 0) return false;
 
-    addToCart(
-      {
+    sizesToAdd.forEach(([size, quantity]) => {
+      addToCart({
         productId: product._id,
         name: product.name,
         image: product.images[0],
         price: finalPrice,
-        size: selectedSize,
+        size: Number(size),
         color: selectedColor,
         maxStock: product.stock,
-      },
-      1
-    );
+      }, quantity);
+    });
+    return true;
+  };
+
+  const handleAddToCart = () => {
+    if (!addSelectedSizesToCart()) return;
 
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 2500);
   };
 
   const handleBuyNow = () => {
-    handleAddToCart();
-    openCart();
+    if (!addSelectedSizesToCart()) return;
+    closeCart();
+    onNavigate('checkout');
+  };
+
+  const updateSizeQuantity = (size: number, change: number) => {
+    const otherSizesQuantity = Object.entries(selectedSizes).reduce(
+      (total, [selected, quantity]) => Number(selected) === size ? total : total + quantity,
+      0
+    );
+    const nextQuantity = Math.max(0, Math.min(product.stock - otherSizesQuantity, (selectedSizes[size] || 0) + change));
+    const nextSizes = { ...selectedSizes };
+    if (nextQuantity === 0) delete nextSizes[size];
+    else nextSizes[size] = nextQuantity;
+    setSelectedSizes(nextSizes);
+    setSelectedSize(nextSizes[size] ? size : Number(Object.keys(nextSizes).pop()) || null);
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-28 pb-24 select-none">
+    <div className="min-h-[100dvh] bg-[#050505] text-white pt-[calc(var(--header-height)+1rem)] md:pt-28 pb-24 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back breadcrumb */}
         <button
@@ -134,7 +151,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="fixed top-20 right-6 z-50 bg-[#0d0d0d] border border-[#E50914] text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3"
+              className="fixed z-50 bg-[#0d0d0d] border border-[#E50914] text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3"
+              style={{ top: 'max(5rem, env(safe-area-inset-top, 0px) + 5rem)', right: 'max(1.5rem, env(safe-area-inset-right, 0px) + 1.5rem)' }}
             >
               <div className="w-6 h-6 rounded-full bg-[#E50914] flex items-center justify-center">
                 <Check className="w-3.5 h-3.5 text-white" />
@@ -149,84 +167,40 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Product Showcase Grid */}
+        {/* Product gallery and details */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Left Column: Visual Presentation (Gallery or 3D Viewer) */}
           <div className="lg:col-span-7 space-y-4">
-            {/* View Mode Toggle: Photo Gallery vs Real-Time 3D */}
-            <div className="flex items-center justify-between bg-neutral-900/80 border border-neutral-800 p-1.5 rounded-xl">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-neutral-400 px-3">
-                Presentation Engine
-              </span>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setViewMode('gallery')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                    viewMode === 'gallery'
-                      ? 'bg-white text-black font-bold'
-                      : 'text-neutral-400 hover:text-white'
-                  }`}
-                >
-                  <Eye className="w-3.5 h-3.5" /> High-Res View
-                </button>
-                <button
-                  onClick={() => setViewMode('3d')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                    viewMode === '3d'
-                      ? 'bg-[#E50914] text-white font-bold'
-                      : 'text-neutral-400 hover:text-white'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" /> 3D Orbit
-                </button>
-              </div>
-            </div>
-
-            {viewMode === 'gallery' ? (
-              <div className="space-y-4">
-                {/* Main Featured Photo */}
-                <div className="relative aspect-square bg-[#0a0a0a] border border-neutral-800 rounded-2xl overflow-hidden p-8 flex items-center justify-center group">
-                  <img
-                    src={product.images[selectedImageIndex] || product.images[0]}
-                    alt={product.name}
-                    className="w-full h-full object-contain filter contrast-[1.08] transition-transform duration-500 group-hover:scale-105"
-                  />
-                  {/* Subtle Red BGY Watermark */}
-                  <div className="absolute bottom-6 right-6 font-display font-extrabold text-3xl text-neutral-800/40 select-none pointer-events-none">
-                    BGY
-                  </div>
-                </div>
-
-                {/* Thumbnails */}
-                {product.images.length > 1 && (
-                  <div className="grid grid-cols-4 gap-3">
-                    {product.images.map((img, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setSelectedImageIndex(idx)}
-                        className={`aspect-square rounded-xl overflow-hidden bg-[#0a0a0a] border p-2 transition-all ${
-                          selectedImageIndex === idx
-                            ? 'border-[#E50914] ring-1 ring-[#E50914]'
-                            : 'border-neutral-800 opacity-60 hover:opacity-100'
-                        }`}
-                      >
-                        <img src={img} alt="" className="w-full h-full object-contain" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                <Shoe3DViewer
-                  shoeName={product.name}
-                  colorHex={product.colors[0]?.hex || '#111111'}
-                  accentHex="#E50914"
+            <div className="space-y-4">
+              <div className="relative aspect-square bg-[#0a0a0a] border border-neutral-800 rounded-2xl overflow-hidden p-8 flex items-center justify-center group">
+                <img
+                  src={product.images[selectedImageIndex] || product.images[0]}
+                  alt={product.name}
+                  className="w-full h-full object-contain filter contrast-[1.08] transition-transform duration-500 group-hover:scale-105"
                 />
+                <div className="absolute bottom-6 right-6 font-display font-extrabold text-3xl text-neutral-800/40 select-none pointer-events-none">
+                  BGY
+                </div>
               </div>
-            )}
 
-
+              {product.images.length > 1 && (
+                <div className="grid grid-cols-4 gap-3">
+                  {product.images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImageIndex(idx)}
+                      className={`aspect-square rounded-xl overflow-hidden bg-[#0a0a0a] border p-2 transition-all ${
+                        selectedImageIndex === idx
+                          ? 'border-[#E50914] ring-1 ring-[#E50914]'
+                          : 'border-neutral-800 opacity-60 hover:opacity-100'
+                      }`}
+                      aria-label={`View product image ${idx + 1}`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-contain" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Column: Product Info & Purchase Controls */}
@@ -324,9 +298,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 {product.sizes.map(sz => (
                   <button
                     key={sz}
-                    onClick={() => setSelectedSize(sz)}
+                    onClick={() => {
+                      const nextSizes = { ...selectedSizes };
+                      if (nextSizes[sz]) delete nextSizes[sz];
+                      else if (Object.values(nextSizes).reduce((total, quantity) => total + quantity, 0) < product.stock) nextSizes[sz] = 1;
+                      setSelectedSizes(nextSizes);
+                      setSelectedSize(nextSizes[sz] ? sz : Number(Object.keys(nextSizes).pop()) || null);
+                    }}
+                    aria-pressed={Boolean(selectedSizes[sz])}
                     className={`py-2.5 text-xs font-mono font-bold rounded-xl border transition-all ${
-                      selectedSize === sz
+                      selectedSizes[sz]
                         ? 'bg-white text-black border-white shadow-lg'
                         : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-600'
                     }`}
@@ -335,6 +316,20 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   </button>
                 ))}
               </div>
+              {Object.entries(selectedSizes).filter(([size]) => product.sizes.includes(Number(size))).length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {Object.entries(selectedSizes).filter(([size]) => product.sizes.includes(Number(size))).map(([size, quantity]) => (
+                    <div key={size} className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900/60 px-3 py-2">
+                      <span className="text-xs font-mono text-neutral-300">EU {size}</span>
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => updateSizeQuantity(Number(size), -1)} aria-label={`Remove one pair in EU size ${size}`} className="w-8 h-8 rounded-lg border border-neutral-700 text-white hover:bg-neutral-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E50914]">−</button>
+                        <span className="min-w-4 text-center text-sm font-mono text-white">{quantity}</span>
+                        <button type="button" onClick={() => updateSizeQuantity(Number(size), 1)} aria-label={`Add one pair in EU size ${size}`} disabled={Object.values(selectedSizes).reduce((total, count) => total + count, 0) >= product.stock} className="w-8 h-8 rounded-lg border border-neutral-700 text-white hover:bg-neutral-800 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E50914]">+</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Stock Availability */}
@@ -355,16 +350,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             <div className="space-y-3 pt-2">
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedSize || product.stock === 0}
+                disabled={Object.keys(selectedSizes).length === 0 || product.stock === 0}
                 className="w-full py-4 rounded-xl bg-white text-black hover:bg-neutral-200 font-display font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-40"
               >
                 <ShoppingBag className="w-4 h-4" />
-                Add to Bag
+                Add to cart
               </button>
 
               <button
                 onClick={handleBuyNow}
-                disabled={!selectedSize || product.stock === 0}
+                disabled={Object.keys(selectedSizes).length === 0 || product.stock === 0}
                 className="w-full py-3.5 rounded-xl bg-[#E50914] text-white hover:bg-red-700 font-display font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-40 shadow-lg shadow-[#E50914]/20"
               >
                 <Zap className="w-4 h-4" />
@@ -415,8 +410,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 BGY silhouettes are built to true-to-size athletic standard.
               </p>
 
-              <div className="border border-neutral-800 rounded-xl overflow-hidden text-xs font-mono">
-                <table className="w-full text-left">
+              <div className="border border-neutral-800 rounded-xl overflow-x-auto text-xs font-mono">
+                <table className="w-full text-left min-w-[320px]">
                   <thead className="bg-neutral-900 text-neutral-400 uppercase text-[10px]">
                     <tr>
                       <th className="p-2.5">Eur</th>

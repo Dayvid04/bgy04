@@ -1,10 +1,10 @@
 services:
   - type: web
     name: bgy-footwear
-    env: node
+    runtime: docker
     plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -13,5 +13,25 @@ services:
         value: 10000
       - key: JWT_SECRET
         generateValue: true
-      - key: APP_URL
+      - key: FRONTEND_URL
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 3306
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: bgy
+      - key: DB_CONNECTION_LIMIT
+        value: 10
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DEMO_CUSTOMER_EMAIL
+        sync: false
+      - key: DEMO_CUSTOMER_PASSWORD
         sync: false

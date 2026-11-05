@@ -109,8 +109,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const subtotal = cart.reduce((acc, curr) => acc + curr.price * curr.quantity, 0);
-  const shipping = subtotal === 0 ? 0 : 3000;
-  const discount = appliedPromo ? Math.round(subtotal * 0.1) : 0;
+  const shipping = subtotal === 0 ? 0 : subtotal >= 50000 ? 0 : 3000;
+  const discount = appliedPromo ? Math.min(Math.round(subtotal * 0.1), subtotal) : 0;
   const total = Math.max(0, subtotal + shipping - discount);
   const itemCount = cart.reduce((acc, curr) => acc + curr.quantity, 0);
 

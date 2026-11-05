@@ -1,12 +1,13 @@
 import { Router, Response } from 'express';
 import { db } from '../db.js';
 import { authenticateUser, AuthRequest } from '../auth.js';
+import { asyncHandler } from '../http.js';
 
 const router = Router();
 
 // GET all products with filtering, searching, sorting
-router.get('/', (req, res) => {
-  let products = db.getProducts();
+router.get('/', asyncHandler(async (req, res) => {
+  let products = await db.getProducts();
 
   const {
     search,
@@ -33,17 +34,14 @@ router.get('/', (req, res) => {
     );
   }
 
-  // Category filter
   if (category && typeof category === 'string' && category !== 'All') {
     products = products.filter(p => p.category.toLowerCase() === category.toLowerCase());
   }
 
-  // Gender filter
   if (gender && typeof gender === 'string') {
     products = products.filter(p => p.gender === gender);
   }
 
-  // Size filter
   if (size) {
     const numSize = Number(size);
     if (!isNaN(numSize)) {
@@ -51,13 +49,11 @@ router.get('/', (req, res) => {
     }
   }
 
-  // Color filter
   if (color && typeof color === 'string') {
     const c = color.toLowerCase();
     products = products.filter(p => p.colors.some(col => col.name.toLowerCase().includes(c)));
   }
 
-  // Price range
   if (minPrice) {
     const min = Number(minPrice);
     if (!isNaN(min)) {
@@ -71,7 +67,6 @@ router.get('/', (req, res) => {
     }
   }
 
-  // Flags
   if (featured === 'true') {
     products = products.filter(p => p.featured);
   }
@@ -82,7 +77,6 @@ router.get('/', (req, res) => {
     products = products.filter(p => !!p.discountPrice && p.discountPrice < p.price);
   }
 
-  // Sorting
   if (sort === 'price_asc') {
     products.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
   } else if (sort === 'price_desc') {
@@ -93,23 +87,23 @@ router.get('/', (req, res) => {
     products.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
-  res.json({
+  return res.json({
     total: products.length,
     products
   });
-});
+}));
 
 // GET single product by ID
-router.get('/:id', (req, res) => {
-  const product = db.findProductById(req.params.id);
+router.get('/:id', asyncHandler(async (req, res) => {
+  const product = await db.findProductById(req.params.id);
   if (!product) {
     return res.status(404).json({ error: 'Product not found.' });
   }
-  res.json(product);
-});
+  return res.json(product);
+}));
 
 // POST review to product
-router.post('/:id/reviews', authenticateUser, (req: AuthRequest, res: Response) => {
+router.post('/:id/reviews', asyncHandler(authenticateUser), asyncHandler(async (req: AuthRequest, res: Response) => {
   const { rating, title, comment } = req.body;
   if (!rating || !comment) {
     return res.status(400).json({ error: 'Rating and review comment are required.' });
@@ -121,7 +115,7 @@ router.post('/:id/reviews', authenticateUser, (req: AuthRequest, res: Response) 
   }
 
   const user = req.user!;
-  const updatedProduct = db.addReview(req.params.id, {
+  const updatedProduct = await db.addReview(req.params.id, {
     userId: user._id,
     userName: user.name,
     rating: numRating,
@@ -133,7 +127,7 @@ router.post('/:id/reviews', authenticateUser, (req: AuthRequest, res: Response) 
     return res.status(404).json({ error: 'Product not found.' });
   }
 
-  res.status(201).json(updatedProduct);
-});
+  return res.status(201).json(updatedProduct);
+}));
 
 export default router;

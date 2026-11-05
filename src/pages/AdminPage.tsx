@@ -21,7 +21,9 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
-import { Product, Order, User } from '../types';
+import { Product, Order, User, SiteContent } from '../types';
+import { pluralize } from '../utils/pluralize';
+import { defaultSiteContent, useSiteContent } from '../context/SiteContentContext';
 
 interface AdminPageProps {
   onNavigate: (route: string) => void;
@@ -31,12 +33,18 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const { user, isAdmin, logout } = useAuth();
   const { formatCurrency, language } = useLanguage();
 
-  const [activeTab, setActiveTab] = useState<'analytics' | 'products' | 'orders' | 'customers'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'products' | 'orders' | 'customers' | 'content'>('analytics');
   const [stats, setStats] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [contentForm, setContentForm] = useState<SiteContent>(defaultSiteContent);
+  const [contentSaving, setContentSaving] = useState(false);
+  const [contentNotice, setContentNotice] = useState('');
+  const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
+  const [auditEntries, setAuditEntries] = useState<Array<{ id: number; adminName: string; action: string; entity: string; details: unknown; createdAt: string }>>([]);
+  const { saveContent } = useSiteContent();
 
   // Product Edit / Add Modal
   const [productModalOpen, setProductModalOpen] = useState(false);
@@ -49,6 +57,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     discountPrice: 0,
     description: '',
     stock: 25,
+    featured: false,
     newArrival: false,
     images: [] as string[],
     sizes: [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
@@ -83,16 +92,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsRes, prodRes, ordRes, custRes] = await Promise.all([
+      const [statsRes, prodRes, ordRes, custRes, contentRes, auditRes] = await Promise.all([
         api.getAdminStats(),
         api.getProducts({}),
         api.getAdminOrders(),
         api.getAdminUsers(),
+        api.getAdminSiteContent(),
+        api.getAdminAudit(),
       ]);
       setStats(statsRes);
       setProducts(prodRes.products);
       setOrders(ordRes || []);
       setCustomers(custRes || []);
+      setContentForm({ ...defaultSiteContent, ...contentRes });
+      setAuditEntries(auditRes || []);
     } catch (err) {
       console.error('Error loading admin data:', err);
     } finally {
@@ -106,13 +119,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     }
   }, [isAdmin]);
 
-  if (!isAdmin) {
+  if (!isAdmin || user?.email?.trim().toLowerCase() !== 'admin') {
     return (
       <div className="min-h-screen bg-[#050505] text-white pt-36 pb-20 flex flex-col items-center justify-center px-4 select-none">
         <Shield className="w-16 h-16 text-[#E50914] mb-4" />
         <h2 className="font-display font-bold text-2xl mb-2">Admin Clearance Required</h2>
         <p className="text-xs font-mono text-neutral-400 mb-6 text-center max-w-sm">
-          You must be authenticated with an administrator account to access the BGY store inventory and order management system.
+          Use the reserved BGY admin account to access the store inventory and order management system.
         </p>
       </div>
     );
@@ -127,6 +140,39 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
       );
     } catch (err: any) {
       alert(err.message || 'Failed to update order status');
+    }
+  };
+
+  const handleUserActiveChange = async (customer: User) => {
+    try {
+      const updated = await api.setUserActive(customer._id, customer.active === false);
+      setCustomers(prev => prev.map(item => item._id === updated._id ? { ...item, active: updated.active } : item));
+    } catch (err: any) {
+      alert(err.message || 'Failed to update account status');
+    }
+  };
+
+  const handleRoleChange = async (customer: User, role: 'customer' | 'admin') => {
+    try {
+      await api.updateUserRole(customer._id, role);
+      setCustomers(prev => prev.map(item => item._id === customer._id ? { ...item, role } : item));
+    } catch (err: any) {
+      alert(err.message || 'Failed to update account role');
+    }
+  };
+
+  const handleSaveContent = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setContentSaving(true);
+    setContentNotice('');
+    try {
+      await saveContent(contentForm);
+      setContentNotice('Website content saved. Changes are live.');
+      setAuditEntries(await api.getAdminAudit());
+    } catch (err: any) {
+      setContentNotice(err.message || 'Could not save website content. Your edits are still on this screen.');
+    } finally {
+      setContentSaving(false);
     }
   };
 
@@ -177,6 +223,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
       discountPrice: prod.discountPrice || 0,
       description: prod.description,
       stock: prod.stock,
+      featured: prod.featured,
       newArrival: prod.newArrival,
       images: prod.images,
       sizes: prod.sizes,
@@ -197,6 +244,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
       discountPrice: 0,
       description: 'Premium materials selected for comfort, durability, and everyday wear.',
       stock: 20,
+      featured: true,
       newArrival: true,
       images: [],
       sizes: [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45],
@@ -292,7 +340,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 : 'bg-neutral-900/60 text-neutral-400 hover:text-white'
             }`}
           >
-            Products ({products.length})
+            {pluralize(products.length, 'product')}
           </button>
           <button
             onClick={() => setActiveTab('orders')}
@@ -302,7 +350,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 : 'bg-neutral-900/60 text-neutral-400 hover:text-white'
             }`}
           >
-            Orders ({orders.length})
+            {pluralize(orders.length, 'order')}
           </button>
           <button
             onClick={() => setActiveTab('customers')}
@@ -312,7 +360,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 : 'bg-neutral-900/60 text-neutral-400 hover:text-white'
             }`}
           >
-            Customers ({customers.length})
+            {pluralize(customers.length, 'customer')}
+          </button>
+          <button
+            onClick={() => setActiveTab('content')}
+            className={`px-4 py-2 rounded-xl text-xs font-mono uppercase tracking-wider transition-all ${activeTab === 'content' ? 'bg-white text-black font-bold' : 'bg-neutral-900/60 text-neutral-400 hover:text-white'}`}
+          >
+            Website Content
           </button>
         </div>
 
@@ -383,7 +437,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                     <div>
                       <span className="font-bold text-white block">{ord.orderNumber}</span>
                       <span className="text-neutral-500 text-[11px]">
-                        {ord.shippingAddress?.fullName} • {ord.products?.length || 0} items
+                        {ord.shippingAddress?.fullName} • {pluralize(ord.products?.length || 0, 'item')}
                       </span>
                     </div>
                     <div className="text-right">
@@ -427,7 +481,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                     <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-neutral-500">
                       <span>Stock: {prod.stock} pairs</span>
                       <span>•</span>
-                      <span>{prod.sizes.length} sizes</span>
+                      <span>{pluralize(prod.sizes.length, 'size')}</span>
                     </div>
                   </div>
 
@@ -487,6 +541,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   <div className="text-right">
                     <span className="text-sm font-bold text-white block">{formatCurrency(ord.total)}</span>
                     <span className="text-[10px] text-neutral-500 uppercase">{ord.paymentMethod}</span>
+                    <span className={`mt-1 block text-[10px] uppercase ${ord.paymentStatus === 'Paid' ? 'text-emerald-400' : 'text-amber-400'}`}>Payment: {ord.paymentStatus}</span>
                   </div>
 
                   {/* Status Change Selector */}
@@ -521,34 +576,185 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 <tr>
                   <th className="pb-3">Customer Name</th>
                   <th className="pb-3">Email</th>
+                  <th className="pb-3">Orders</th>
+                  <th className="pb-3">Account</th>
                   <th className="pb-3">Role</th>
-                  <th className="pb-3">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-900">
-                {customers.map(cust => (
-                  <tr key={cust._id}>
-                    <td className="py-3 font-bold text-white">{cust.name}</td>
-                    <td className="py-3 text-neutral-400">{cust.email}</td>
-                    <td className="py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                          cust.role === 'admin'
-                            ? 'bg-[#E50914]/20 text-[#E50914]'
-                            : 'bg-neutral-800 text-neutral-300'
-                        }`}
-                      >
-                        {cust.role}
-                      </span>
-                    </td>
-                    <td className="py-3 text-emerald-400">
-                      Active Member
-                    </td>
-                  </tr>
-                ))}
+                {customers.map(cust => {
+                  const customerOrders = orders.filter(order => order.userId === cust._id);
+                  return (
+                    <React.Fragment key={cust._id}>
+                      <tr>
+                        <td className="py-3 font-bold text-white">{cust.name}</td>
+                        <td className="py-3 text-neutral-400">{cust.email}</td>
+                        <td className="py-3">
+                          <button onClick={() => setExpandedCustomerId(expandedCustomerId === cust._id ? null : cust._id)} className="rounded border border-neutral-800 bg-neutral-900 px-2 py-1 text-neutral-200 hover:border-neutral-600">
+                            {customerOrders.length} {customerOrders.length === 1 ? 'order' : 'orders'}
+                          </button>
+                        </td>
+                        <td className="py-3">
+                          <button onClick={() => handleUserActiveChange(cust)} className={`rounded border px-2 py-1 ${cust.active === false ? 'border-red-900 text-red-300' : 'border-emerald-900 text-emerald-300'}`}>
+                            {cust.active === false ? 'Deactivated' : 'Active'}
+                          </button>
+                        </td>
+                        <td className="py-3">
+                          <select value={cust.role} onChange={event => handleRoleChange(cust, event.target.value as 'customer' | 'admin')} className="rounded border border-neutral-800 bg-neutral-900 px-2 py-1 text-neutral-200">
+                            <option value="customer">Customer</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
+                      </tr>
+                      {expandedCustomerId === cust._id && (
+                        <tr>
+                          <td colSpan={5} className="pb-4">
+                            {customerOrders.length ? (
+                              <div className="space-y-2 border-l border-neutral-800 pl-4">
+                                {customerOrders.map(order => (
+                                  <div key={order._id} className="flex flex-wrap justify-between gap-2 text-[11px] text-neutral-400">
+                                    <span className="text-white">{order.orderNumber}: {order.products.map(item => `${item.name} x${item.quantity}`).join(', ')}</span>
+                                    <span>{formatCurrency(order.total)} · {order.status} · Payment: {order.paymentStatus}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : <p className="pl-4 text-[11px] text-neutral-500">No orders yet.</p>}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+        )}
+
+        {activeTab === 'content' && (
+          <form onSubmit={handleSaveContent} className="space-y-8">
+            <section className="space-y-4 rounded-2xl border border-neutral-800 bg-[#0a0a0a] p-5 sm:p-7">
+              <div><h3 className="font-display text-lg font-bold">Homepage content</h3><p className="mt-1 text-xs text-neutral-500">Text and image changes publish to the storefront when saved.</p></div>
+              <ContentField label="Announcement" value={contentForm.announcement} onChange={value => setContentForm({ ...contentForm, announcement: value })} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ContentField label="Hero eyebrow" value={contentForm.heroEyebrow} onChange={value => setContentForm({ ...contentForm, heroEyebrow: value })} />
+                <ContentField label="Hero title" value={contentForm.heroTitle} onChange={value => setContentForm({ ...contentForm, heroTitle: value })} />
+              </div>
+              <ContentField label="Hero description" value={contentForm.heroDescription} onChange={value => setContentForm({ ...contentForm, heroDescription: value })} multiline />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ContentField label="Hero image URL" value={contentForm.heroImage} onChange={value => setContentForm({ ...contentForm, heroImage: value })} />
+                <ContentField label="Hero image alt text" value={contentForm.heroImageAlt} onChange={value => setContentForm({ ...contentForm, heroImageAlt: value })} />
+                <ContentField label="Primary button" value={contentForm.primaryButtonText} onChange={value => setContentForm({ ...contentForm, primaryButtonText: value })} />
+                <ContentField label="Secondary button" value={contentForm.secondaryButtonText} onChange={value => setContentForm({ ...contentForm, secondaryButtonText: value })} />
+              </div>
+            </section>
+
+            <section className="space-y-4 rounded-2xl border border-neutral-800 bg-[#0a0a0a] p-5 sm:p-7">
+              <h3 className="font-display text-lg font-bold">Homepage sections</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ContentField label="Men's eyebrow" value={contentForm.menEyebrow} onChange={value => setContentForm({ ...contentForm, menEyebrow: value })} />
+                <ContentField label="Men's title" value={contentForm.menTitle} onChange={value => setContentForm({ ...contentForm, menTitle: value })} />
+                <ContentField label="Men's description" value={contentForm.menDescription} onChange={value => setContentForm({ ...contentForm, menDescription: value })} multiline />
+                <ContentField label="Men's button" value={contentForm.menButtonText} onChange={value => setContentForm({ ...contentForm, menButtonText: value })} />
+                <ContentField label="Women's eyebrow" value={contentForm.womenEyebrow} onChange={value => setContentForm({ ...contentForm, womenEyebrow: value })} />
+                <ContentField label="Women's title" value={contentForm.womenTitle} onChange={value => setContentForm({ ...contentForm, womenTitle: value })} />
+                <ContentField label="Women's description" value={contentForm.womenDescription} onChange={value => setContentForm({ ...contentForm, womenDescription: value })} multiline />
+                <ContentField label="Women's button" value={contentForm.womenButtonText} onChange={value => setContentForm({ ...contentForm, womenButtonText: value })} />
+                <ContentField label="Closing eyebrow" value={contentForm.closingEyebrow} onChange={value => setContentForm({ ...contentForm, closingEyebrow: value })} />
+                <ContentField label="Closing quote" value={contentForm.closingQuote} onChange={value => setContentForm({ ...contentForm, closingQuote: value })} multiline />
+                <ContentField label="Closing description" value={contentForm.closingDescription} onChange={value => setContentForm({ ...contentForm, closingDescription: value })} multiline />
+                <ContentField label="Closing button" value={contentForm.closingButtonText} onChange={value => setContentForm({ ...contentForm, closingButtonText: value })} />
+              </div>
+              <div className="flex flex-wrap gap-4">
+                {([
+                  ['showMenSection', "Show men's section"], ['showWomenSection', "Show women's section"], ['showBenefits', 'Show benefits'], ['showClosing', 'Show closing section'],
+                ] as const).map(([field, label]) => (
+                  <label key={field} className="flex items-center gap-2 text-sm text-neutral-300"><input type="checkbox" checked={contentForm[field]} onChange={event => setContentForm({ ...contentForm, [field]: event.target.checked })} className="accent-[#E50914]" />{label}</label>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4 rounded-2xl border border-neutral-800 bg-[#0a0a0a] p-5 sm:p-7">
+              <h3 className="font-display text-lg font-bold">Promotions and contact</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ContentField label="Promotion title" value={contentForm.promotionTitle} onChange={value => setContentForm({ ...contentForm, promotionTitle: value })} />
+                <ContentField label="Promotion message" value={contentForm.promotionMessage} onChange={value => setContentForm({ ...contentForm, promotionMessage: value })} />
+                <ContentField label="Discount percent" type="number" value={String(contentForm.promotionDiscountPercent)} onChange={value => setContentForm({ ...contentForm, promotionDiscountPercent: Number(value) })} />
+                <ContentField label="Starts at (ISO date/time)" value={contentForm.promotionStartsAt} onChange={value => setContentForm({ ...contentForm, promotionStartsAt: value })} />
+                <ContentField label="Ends at (ISO date/time)" value={contentForm.promotionEndsAt} onChange={value => setContentForm({ ...contentForm, promotionEndsAt: value })} />
+                <ContentField label="Footer description" value={contentForm.footerDescription} onChange={value => setContentForm({ ...contentForm, footerDescription: value })} multiline />
+                <ContentField label="Contact email" value={contentForm.contactEmail} onChange={value => setContentForm({ ...contentForm, contactEmail: value })} />
+                <ContentField label="Contact phone" value={contentForm.contactPhone} onChange={value => setContentForm({ ...contentForm, contactPhone: value })} />
+                <ContentField label="Instagram URL (HTTPS)" value={contentForm.instagramUrl} onChange={value => setContentForm({ ...contentForm, instagramUrl: value })} />
+              </div>
+              <label className="flex items-center gap-2 text-sm text-neutral-300"><input type="checkbox" checked={contentForm.promotionActive} onChange={event => setContentForm({ ...contentForm, promotionActive: event.target.checked })} className="accent-[#E50914]" />Promotion active</label>
+            </section>
+
+            <section className="space-y-4 rounded-2xl border border-neutral-800 bg-[#0a0a0a] p-5 sm:p-7">
+              <h3 className="font-display text-lg font-bold">Navigation labels</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ContentField label="Shop" value={contentForm.navShop} onChange={value => setContentForm({ ...contentForm, navShop: value })} />
+                <ContentField label="New in" value={contentForm.navNewIn} onChange={value => setContentForm({ ...contentForm, navNewIn: value })} />
+                <ContentField label="About" value={contentForm.navAbout} onChange={value => setContentForm({ ...contentForm, navAbout: value })} />
+                <ContentField label="Contact" value={contentForm.navContact} onChange={value => setContentForm({ ...contentForm, navContact: value })} />
+              </div>
+            </section>
+
+            <section className="space-y-4 rounded-2xl border border-neutral-800 bg-[#0a0a0a] p-5 sm:p-7">
+              <h3 className="font-display text-lg font-bold">About page</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {([
+                  ['aboutBadge', 'Page label'], ['aboutHeroTitle', 'Hero title'], ['aboutHeroHighlight', 'Hero highlight'],
+                  ['aboutHeroText', 'Hero description'], ['aboutSelectionBadge', 'Selection label'], ['aboutSelectionTitle', 'Selection title'],
+                  ['aboutSelectionText', 'Selection description'], ['aboutComfortTitle', 'Comfort title'], ['aboutComfortText', 'Comfort description'],
+                  ['aboutDesignTitle', 'Design title'], ['aboutDesignText', 'Design description'], ['aboutValueTitle', 'Value title'],
+                  ['aboutValueText', 'Value description'], ['aboutApproachBadge', 'Approach label'], ['aboutApproachTitle', 'Approach title'],
+                  ['aboutApproachText1', 'Approach paragraph one'], ['aboutApproachText2', 'Approach paragraph two'],
+                  ['aboutCuratedQuality', 'Quality label'], ['aboutRetailExcellence', 'Retail label'], ['aboutCtaTitle', 'Call-to-action title'],
+                  ['aboutCtaButton', 'Call-to-action button'], ['aboutImage', 'About image URL'], ['aboutImageAlt', 'About image alt text'],
+                ] as const).map(([field, label]) => (
+                  <ContentField key={field} label={label} value={contentForm[field]} onChange={value => setContentForm({ ...contentForm, [field]: value })} multiline={field.endsWith('Text') || field.startsWith('aboutApproachText')} />
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4 rounded-2xl border border-neutral-800 bg-[#0a0a0a] p-5 sm:p-7">
+              <h3 className="font-display text-lg font-bold">Contact and delivery page</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {([
+                  ['contactBadge', 'Page label'], ['contactHeading', 'Page title'], ['contactResponseTime', 'Response-time label'],
+                  ['contactResponseTimeValue', 'Response-time value'], ['contactResponseTimeSuffix', 'Response-time note'],
+                  ['contactStoreHours', 'Store-hours label'], ['contactStoreHoursValue', 'Store hours'], ['contactDeliveryLabel', 'Delivery label'],
+                  ['contactDeliveryValue', 'Delivery information'], ['contactConciergeLabel', 'Concierge label'], ['contactConciergeValue', 'Concierge information'],
+                  ['contactInquiryTitle', 'Inquiry form title'], ['contactInquirySubtitle', 'Inquiry form description'], ['contactSuccessMsg', 'Success message'],
+                  ['contactFullNameLabel', 'Name field label'], ['contactFullNamePlaceholder', 'Name placeholder'],
+                  ['contactEmailLabel', 'Email field label'], ['contactEmailPlaceholder', 'Email placeholder'],
+                  ['contactSubjectLabel', 'Subject field label'], ['contactSubjectPlaceholder', 'Subject placeholder'],
+                  ['contactMessageLabel', 'Message field label'], ['contactMessagePlaceholder', 'Message placeholder'],
+                  ['contactSubmitButton', 'Submit button'], ['contactSendingLabel', 'Submitting label'],
+                  ['contactChannelsTitle', 'Contact channels title'], ['contactStorePointsTitle', 'Store points title'], ['contactStoreName', 'Store name'],
+                  ['contactLocation', 'Store location'], ['contactFaqBadge', 'FAQ label'], ['contactFaqTitle', 'FAQ title'],
+                  ['contactFaq1Question', 'FAQ 1 question'], ['contactFaq1Answer', 'FAQ 1 answer'], ['contactFaq2Question', 'FAQ 2 question'],
+                  ['contactFaq2Answer', 'FAQ 2 answer'], ['contactFaq3Question', 'FAQ 3 question'], ['contactFaq3Answer', 'FAQ 3 answer'],
+                  ['contactFaq4Question', 'FAQ 4 question'], ['contactFaq4Answer', 'FAQ 4 answer'],
+                ] as const).map(([field, label]) => (
+                  <ContentField key={field} label={label} value={contentForm[field]} onChange={value => setContentForm({ ...contentForm, [field]: value })} multiline={field.endsWith('Answer') || field.endsWith('Subtitle') || field.endsWith('Suffix')} />
+                ))}
+              </div>
+            </section>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <button disabled={contentSaving} className="rounded-xl bg-white px-5 py-3 text-xs font-mono font-bold uppercase tracking-widest text-black disabled:opacity-50">{contentSaving ? 'Saving...' : 'Save website content'}</button>
+              {contentNotice && <p role="status" className="text-sm text-neutral-300">{contentNotice}</p>}
+            </div>
+
+            <section className="rounded-2xl border border-neutral-800 bg-[#0a0a0a] p-5 sm:p-7">
+              <h3 className="font-display text-lg font-bold">Admin audit history</h3>
+              <div className="mt-4 divide-y divide-neutral-900">
+                {auditEntries.map(entry => <div key={entry.id} className="flex flex-wrap justify-between gap-2 py-3 text-xs"><span className="text-neutral-200">{entry.adminName} {entry.action} {entry.entity}</span><time className="text-neutral-500">{new Date(entry.createdAt).toLocaleString()}</time></div>)}
+                {auditEntries.length === 0 && <p className="py-3 text-xs text-neutral-500">No admin changes recorded yet.</p>}
+              </div>
+            </section>
+          </form>
         )}
       </div>
 
@@ -713,6 +919,14 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   </span>
                 </label>
 
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-900/60 px-4 py-3 font-mono text-xs text-neutral-200">
+                    <input type="checkbox" checked={productForm.featured} onChange={e => setProductForm({ ...productForm, featured: e.target.checked })} className="h-4 w-4 accent-[#E50914]" />
+                    <span>Feature on homepage</span>
+                  </label>
+                  <p className="flex items-center rounded-xl border border-neutral-800 px-4 py-3 text-[11px] text-neutral-400">Set stock to zero to make this shoe unavailable for purchase.</p>
+                </div>
+
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block font-mono uppercase tracking-wider text-neutral-400">
@@ -800,3 +1014,20 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     </div>
   );
 };
+
+const ContentField: React.FC<{
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  multiline?: boolean;
+  type?: 'text' | 'number';
+}> = ({ label, value, onChange, multiline, type = 'text' }) => (
+  <label className="block text-xs font-mono uppercase tracking-wider text-neutral-400">
+    {label}
+    {multiline ? (
+      <textarea rows={3} value={value} onChange={event => onChange(event.target.value)} className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm font-sans normal-case tracking-normal text-white" />
+    ) : (
+      <input type={type} min={type === 'number' ? 0 : undefined} max={type === 'number' ? 100 : undefined} value={value} onChange={event => onChange(event.target.value)} className="mt-1 w-full rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm font-sans normal-case tracking-normal text-white" />
+    )}
+  </label>
+);

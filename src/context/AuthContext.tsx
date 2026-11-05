@@ -4,7 +4,6 @@ import { api } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isLoading: boolean;
@@ -22,13 +21,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem('bgy_token');
-    } catch {
-      return null;
-    }
-  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
@@ -36,7 +28,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Handle unauthorized events emitted by API client
   useEffect(() => {
     const handleUnauthorized = () => {
-      setToken(null);
       setUser(null);
       setIsLoading(false);
     };
@@ -52,22 +43,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let isMounted = true;
 
     async function loadUser() {
-      const storedToken = (() => {
-        try {
-          return localStorage.getItem('bgy_token');
-        } catch {
-          return null;
-        }
-      })();
-
-      if (!storedToken) {
-        if (isMounted) {
-          setUser(null);
-          setIsLoading(false);
-        }
-        return;
-      }
-
       try {
         const res = await api.getMe();
         if (isMounted) {
@@ -76,24 +51,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           } else {
             // Invalid/expired token returned null user
             setUser(null);
-            setToken(null);
-            try {
-              localStorage.removeItem('bgy_token');
-            } catch {
-              // ignore
-            }
           }
         }
-      } catch (err) {
-        console.warn('Session check failed or expired, switching to guest mode:', err);
+      } catch {
         if (isMounted) {
           setUser(null);
-          setToken(null);
-          try {
-            localStorage.removeItem('bgy_token');
-          } catch {
-            // ignore
-          }
         }
       } finally {
         if (isMounted) {
@@ -107,39 +69,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, []);
 
   const login = async (email: string, password: string) => {
     const res = await api.login({ email, password });
-    try {
-      localStorage.setItem('bgy_token', res.token);
-    } catch {
-      // ignore
-    }
-    setToken(res.token);
     setUser(res.user);
     setIsAuthModalOpen(false);
   };
 
   const register = async (name: string, email: string, password: string, phone?: string) => {
     const res = await api.register({ name, email, password, phone });
-    try {
-      localStorage.setItem('bgy_token', res.token);
-    } catch {
-      // ignore
-    }
-    setToken(res.token);
     setUser(res.user);
     setIsAuthModalOpen(false);
   };
 
   const logout = () => {
-    try {
-      localStorage.removeItem('bgy_token');
-    } catch {
-      // ignore
-    }
-    setToken(null);
+    void api.logout().catch(() => undefined);
     setUser(null);
   };
 
@@ -163,9 +108,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <AuthContext.Provider
       value={{
         user,
-        token,
         isAuthenticated: !!user,
-        isAdmin: user?.role === 'admin',
+        isAdmin: user?.role === 'admin' && user?.email?.trim().toLowerCase() === 'admin',
         isLoading,
         login,
         register,

@@ -1,50 +1,61 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
-import { Heart, Eye, ShoppingBag, Star, Check } from 'lucide-react';
+import { Heart, Eye, ShoppingBag } from 'lucide-react';
 import { Product } from '../../types';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useProductSelection } from '../../context/ProductSelectionContext';
 
 interface ProductCardProps {
   product: Product;
   onSelect: (productId: string) => void;
   onQuickView: (product: Product) => void;
+  onBuyNow: () => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onSelect,
   onQuickView,
+  onBuyNow,
 }) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { addToCart } = useCart();
-  const { t, formatCurrency } = useLanguage();
-  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
+  const { addToCart, closeCart } = useCart();
+  const { formatCurrency } = useLanguage();
+  const { selectedSize, selectedColor, setSelectedSize, setSelectedSizes, setSelectedColor } = useProductSelection(product._id, product.colors[0]?.name || 'Standard');
   const [isHovered, setIsHovered] = useState(false);
-  const [quickAdded, setQuickAdded] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const isSaved = isInWishlist(product._id);
   const displayImage = product.images[isHovered && product.images[1] ? 1 : 0] || product.images[0];
 
-  const handleQuickAdd = (e: React.MouseEvent) => {
+  const handlePurchase = (buyNow: boolean) => (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Use first available Eur size
-    const defaultSize = product.sizes[0] || 39;
-    const defaultColor = product.colors[selectedColorIndex]?.name || 'Standard';
+    if (!selectedSize) {
+      onQuickView(product);
+      return;
+    }
 
     addToCart({
       productId: product._id,
       name: product.name,
       image: product.images[0],
       price: product.discountPrice || product.price,
-      size: defaultSize,
-      color: defaultColor,
+      size: selectedSize,
+      color: selectedColor,
       maxStock: product.stock,
     }, 1);
+    closeCart();
 
-    setQuickAdded(true);
-    setTimeout(() => setQuickAdded(false), 1500);
+    if (buyNow) {
+      onBuyNow();
+      return;
+    }
+
+    setToastMessage(`Added to cart: ${product.name}, ${selectedColor}, EU ${selectedSize}`);
+    window.setTimeout(() => setToastMessage(''), 2500);
   };
 
   return (
@@ -52,7 +63,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onClick={() => onSelect(product._id)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative bg-[#0D0D0D] border border-neutral-800/80 hover:border-neutral-700 rounded-2xl p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.8)] cursor-pointer"
+      className="group relative min-w-0 bg-[#0D0D0D] border border-neutral-800/80 hover:border-neutral-700 rounded-xl sm:rounded-2xl p-2 sm:p-4 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.8)] cursor-pointer"
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -68,11 +79,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {product.discountPrice && (
             <span className="px-2 py-0.5 rounded-full bg-[#E50914] text-white text-[9px] font-mono font-bold uppercase tracking-widest">
               SALE
-            </span>
-          )}
-          {product.stock <= 10 && product.stock > 0 && (
-            <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-mono uppercase tracking-wider">
-              {product.stock} Left
             </span>
           )}
         </div>
@@ -103,70 +109,55 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           loading="lazy"
         />
 
-        {/* Hover Quick View & Quick Add Action Buttons */}
-        <div className="absolute inset-x-3 bottom-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-          <button
+        <button
+            type="button"
             onClick={e => {
               e.stopPropagation();
               onQuickView(product);
             }}
-            className="flex-1 py-2 px-3 bg-neutral-900/90 hover:bg-neutral-800 backdrop-blur-md text-white text-[11px] font-mono uppercase tracking-wider rounded-lg border border-neutral-700 flex items-center justify-center gap-1.5 transition-colors"
+            className="absolute left-[5px] right-[5px] bottom-[5px] h-[42px] rounded-xl border border-white/10 bg-black/65 backdrop-blur-sm text-white text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914]"
           >
-            <Eye className="w-3.5 h-3.5" />
-            {t('shop.quickView')}
+            <Eye className="w-4 h-4" />
+            <span>Quick view</span>
           </button>
-          <button
-            onClick={handleQuickAdd}
-            className="py-2 px-3 bg-white hover:bg-neutral-200 text-black text-[11px] font-mono uppercase tracking-wider rounded-lg font-bold flex items-center justify-center gap-1.5 transition-colors"
-            title={t('product.addToBag')}
-          >
-            {quickAdded ? (
-              <Check className="w-3.5 h-3.5 text-emerald-600" />
-            ) : (
-              <ShoppingBag className="w-3.5 h-3.5" />
-            )}
-          </button>
-        </div>
       </div>
 
       {/* Product Details Info */}
-      <div className="mt-4 flex flex-col flex-1 justify-between">
+      <div className="mt-2 sm:mt-4 flex flex-col flex-1 justify-between">
         <div>
-          <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400 mb-1">
+          <div className="flex items-center text-[11px] font-mono text-neutral-400 mb-1">
             <span className="uppercase tracking-widest">{product.category}</span>
-            <div className="flex items-center gap-1 text-amber-400">
-              <Star className="w-3 h-3 fill-amber-400" />
-              <span>{product.rating.toFixed(1)}</span>
-            </div>
           </div>
 
-          <h3 className="font-display font-bold text-base text-white group-hover:text-neutral-200 transition-colors truncate">
+          <h3 className="font-display font-bold text-xs sm:text-base text-white group-hover:text-neutral-200 transition-colors line-clamp-2 min-h-[2rem] sm:min-h-0">
             {product.name}
           </h3>
 
-          <p className="text-xs text-neutral-400 line-clamp-1 mt-0.5 font-sans">
+          <p className="hidden sm:block text-xs text-neutral-400 line-clamp-1 mt-0.5 font-sans">
             {product.tagline}
           </p>
         </div>
 
         {/* Bottom Row: Color swatches & Price */}
-        <div className="mt-4 pt-3 border-t border-neutral-900 flex items-center justify-between">
+        <div className="mt-2 sm:mt-4 pt-2 sm:pt-3 border-t border-neutral-900 flex flex-wrap items-center justify-between gap-2">
           {/* Colors */}
           <div className="flex items-center gap-1.5">
-            {product.colors.map((color, idx) => (
-              <span
+              {product.colors.map(color => (
+              <button
                 key={color.name}
+                type="button"
                 onClick={e => {
                   e.stopPropagation();
-                  setSelectedColorIndex(idx);
+                  setSelectedColor(color.name);
                 }}
-                className={`w-3 h-3 rounded-full border transition-all ${
-                  selectedColorIndex === idx
+                className={`w-4 h-4 rounded-full border transition-all ${
+                  selectedColor === color.name
                     ? 'border-[#E50914] scale-125'
                     : 'border-neutral-700 hover:border-neutral-400'
                 }`}
                 style={{ backgroundColor: color.hex }}
-                title={color.name}
+                aria-label={color.name}
+                aria-pressed={selectedColor === color.name}
               />
             ))}
           </div>
@@ -189,7 +180,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-2 mt-2 sm:mt-3">
+          <button
+            type="button"
+            onClick={handlePurchase(false)}
+            disabled={product.stock <= 0}
+            aria-label="Add to cart"
+            title="Add to cart"
+            className="h-10 sm:h-[46px] rounded-lg bg-white text-black hover:bg-neutral-200 font-display font-bold text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914]"
+          >
+            <ShoppingBag className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handlePurchase(true)}
+            disabled={product.stock <= 0}
+            className="h-10 sm:h-[46px] rounded-lg bg-[#E50914] hover:bg-red-700 text-white font-display font-bold text-[10px] sm:text-xs uppercase tracking-widest flex items-center justify-center disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            Buy now
+          </button>
+        </div>
       </div>
+
+      {toastMessage && (
+        createPortal(
+          <div role="status" className="fixed z-[70] bottom-5 left-1/2 -translate-x-1/2 max-w-[calc(100vw-2rem)] px-4 py-3 rounded-xl bg-neutral-900 border border-neutral-700 text-white text-xs font-mono shadow-2xl">
+            {toastMessage}
+          </div>,
+          document.body
+        )
+      )}
     </motion.div>
   );
 };

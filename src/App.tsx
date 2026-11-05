@@ -5,6 +5,8 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { SiteContentProvider } from './context/SiteContentContext';
+import { ProductSelectionProvider } from './context/ProductSelectionContext';
 
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
@@ -31,7 +33,7 @@ export function AppContent() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [shopCategory, setShopCategory] = useState('All');
   const [shopSearch, setShopSearch] = useState('');
-  const [shopGender, setShopGender] = useState<'men' | 'women' | undefined>(undefined);
+  const [shopGender, setShopGender] = useState<'all' | 'men' | 'women'>( 'all' );
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
@@ -40,15 +42,13 @@ export function AppContent() {
     }
   }, [authLoading, isAdmin]);
 
-  const navigateTo = (route: string, gender?: 'men' | 'women') => {
+  const navigateTo = (route: string, gender?: 'all' | 'men' | 'women') => {
     if (route === 'wishlist') {
       setCurrentRoute('account');
       return;
     }
-    if (route === 'shop' && gender) {
-      setShopGender(gender);
-    } else if (route === 'shop') {
-      setShopGender(undefined);
+    if (route === 'shop') {
+      setShopGender(gender || 'all');
     }
     setCurrentRoute(route as Route);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -114,6 +114,7 @@ export function AppContent() {
             {currentRoute === 'shop' && (
               <ShopPage
                 onSelectProduct={handleSelectProduct}
+                onNavigateToCheckout={() => navigateTo('checkout')}
                 initialCategory={shopCategory}
                 initialSearch={shopSearch}
                 initialGender={shopGender}
@@ -123,6 +124,7 @@ export function AppContent() {
             {currentRoute === 'new-in' && (
               <ShopPage
                 onSelectProduct={handleSelectProduct}
+                onNavigateToCheckout={() => navigateTo('checkout')}
                 initialCategory="All"
                 newArrivalsOnly
               />
@@ -191,11 +193,6 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   handleReset = () => {
-    try {
-      localStorage.removeItem('bgy_token');
-    } catch {
-      // ignore
-    }
     this.setState({ hasError: false, error: null });
     window.location.reload();
   };
@@ -233,13 +230,17 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <LanguageProvider>
-          <AuthProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <AppContent />
-              </WishlistProvider>
-            </CartProvider>
-          </AuthProvider>
+          <SiteContentProvider>
+            <AuthProvider>
+              <CartProvider>
+                <ProductSelectionProvider>
+                  <WishlistProvider>
+                    <AppContent />
+                  </WishlistProvider>
+                </ProductSelectionProvider>
+              </CartProvider>
+            </AuthProvider>
+          </SiteContentProvider>
         </LanguageProvider>
       </ThemeProvider>
     </ErrorBoundary>

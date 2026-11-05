@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ShieldCheck,
   Truck,
-  CreditCard,
   CheckCircle2,
   ArrowRight,
   ArrowLeft,
@@ -12,7 +11,6 @@ import {
   Package,
   Smartphone,
   MapPin,
-  Banknote,
   AlertCircle
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -21,6 +19,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { RWANDA_DISTRICTS } from '../data/rwandaDistricts';
 import { Order } from '../types';
+import { pluralize } from '../utils/pluralize';
 
 interface CheckoutPageProps {
   onNavigate: (route: string) => void;
@@ -60,14 +59,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
     deliveryLocation?: string;
   }>({});
 
-  // Payment Options
-  const [paymentMethod, setPaymentMethod] = useState<'momo' | 'airtel' | 'cod' | 'card'>('momo');
-  const [momoNumber, setMomoNumber] = useState('');
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
-  const [cardExp, setCardExp] = useState('12/28');
-  const [cardCvc, setCardCvc] = useState('992');
-  const [cardHolder, setCardHolder] = useState('');
-
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -85,25 +76,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
     }
   }, [user]);
 
-  // Sync phone to momo number initially
-  useEffect(() => {
-    if (phone && !momoNumber) {
-      setMomoNumber(phone);
-    }
-  }, [phone]);
-
-  // Helper to format Rwandan phone numbers cleanly
+  // Keep the entered Rwanda number in local or international format.
   const handlePhoneChange = (val: string) => {
-    // Keep numbers and plus
-    let cleaned = val.replace(/[^\d+]/g, '');
-    if (cleaned.startsWith('07') && cleaned.length >= 2) {
-      cleaned = '+250 ' + cleaned.substring(1);
-    } else if (cleaned.startsWith('2507')) {
-      cleaned = '+' + cleaned;
-    } else if (cleaned.startsWith('7') && cleaned.length <= 9) {
-      cleaned = '+250 ' + cleaned;
-    }
-    setPhone(cleaned);
+    const usesCountryCode = val.trimStart().startsWith('+');
+    const digits = val.replace(/\D/g, '').slice(0, usesCountryCode ? 12 : 10);
+    setPhone(`${usesCountryCode ? '+' : ''}${digits}`);
     if (errors.phone) {
       setErrors(prev => ({ ...prev, phone: undefined }));
     }
@@ -118,16 +95,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
       deliveryLocation?: string;
     } = {};
 
-    if (!fullName.trim()) {
+    const nameParts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (nameParts.length < 2 || nameParts.some(part => !/\p{L}/u.test(part))) {
       newErrors.fullName = t('checkout.valFullName');
     }
 
-    const cleanPhone = phone.replace(/[\s-]/g, '');
-    // Rwanda phone pattern: +250 7XX XXX XXX or 07XX XXX XXX
-    const rwandaPhoneRegex = /^(\+?2507[2389]\d{7}|07[2389]\d{7}|\+?2507\d{8})$/;
-    if (!cleanPhone || cleanPhone.length < 9) {
-      newErrors.phone = t('checkout.valPhone');
-    } else if (!rwandaPhoneRegex.test(cleanPhone) && cleanPhone.length < 10) {
+    const cleanPhone = phone.trim().replace(/[\s-]/g, '');
+    const isLocalPhone = /^07[2389]\d{7}$/.test(cleanPhone);
+    const isInternationalPhone = /^\+2507[2389]\d{7}$/.test(cleanPhone);
+    if (!isLocalPhone && !isInternationalPhone) {
       newErrors.phone = t('checkout.valPhone');
     }
 
@@ -135,7 +111,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
       newErrors.district = t('checkout.valDistrict');
     }
 
-    if (!deliveryLocation.trim()) {
+    if (!/\p{L}/u.test(deliveryLocation.trim())) {
       newErrors.deliveryLocation = t('checkout.valDeliveryLocation');
     }
 
@@ -159,21 +135,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
 
     try {
       // Normalize Rwandan phone number
-      let formattedPhone = phone.trim();
+      let formattedPhone = phone.trim().replace(/[\s-]/g, '');
       if (formattedPhone.startsWith('07')) {
         formattedPhone = '+250 ' + formattedPhone.substring(1);
       } else if (!formattedPhone.startsWith('+250') && formattedPhone.startsWith('7')) {
         formattedPhone = '+250 ' + formattedPhone;
       }
-
-      const paymentMethodName =
-        paymentMethod === 'momo'
-          ? 'MTN Mobile Money'
-          : paymentMethod === 'airtel'
-          ? 'Airtel Money'
-          : paymentMethod === 'cod'
-          ? 'Cash on Delivery'
-          : 'Credit/Debit Card';
 
       const isRubavuOrKigali = ['Rubavu', 'Gasabo', 'Kicukiro', 'Nyarugenge'].includes(district.trim());
       const orderPayload = {
@@ -201,7 +168,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
         shippingMethod: isRubavuOrKigali
           ? 'Rubavu/Kigali Wednesday and Saturday delivery'
           : 'Public transport courier (buyer risk)',
-        paymentMethod: paymentMethodName,
+        paymentMethod: 'MTN Mobile Money',
         subtotal,
         shippingCost: shipping,
         discount,
@@ -222,7 +189,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
   // Empty cart view
   if (cart.length === 0 && !placedOrder) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white pt-32 pb-20 flex flex-col items-center justify-center px-4">
+      <div className="min-h-[100dvh] bg-[#050505] text-white pt-[calc(var(--header-height)+1rem)] md:pt-32 pb-20 flex flex-col items-center justify-center px-4">
         <ShoppingBag className="w-16 h-16 text-neutral-600 mb-4" />
         <h2 className="font-display font-bold text-2xl mb-2">{t('cart.emptyTitle')}</h2>
         <p className="text-xs font-mono text-neutral-400 mb-6 max-w-sm text-center">
@@ -241,7 +208,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
   // Order Confirmed Screen
   if (placedOrder) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white pt-32 pb-24 px-4 select-none">
+      <div className="min-h-[100dvh] bg-[#050505] text-white pt-[calc(var(--header-height)+1rem)] md:pt-32 pb-24 px-4 select-none">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -317,27 +284,27 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-28 pb-24 select-none">
+    <div className="min-h-[100dvh] bg-[#050505] text-white pt-[calc(var(--header-height)+1rem)] md:pt-28 pb-24 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Breadcrumb */}
-        <div className="mb-8 flex items-center justify-between border-b border-neutral-900 pb-4">
+        <div className="mb-5 sm:mb-8 flex items-center justify-between border-b border-neutral-900 pb-3 sm:pb-4">
           <button
             onClick={() => onNavigate('shop')}
             className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> {t('checkout.back')}
           </button>
-          <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-neutral-400">
             <Lock className="w-3.5 h-3.5 text-[#E50914]" />
             <span>256-Bit SSL Encrypted Checkout • Rwanda</span>
           </div>
         </div>
 
         {/* Step Indicator Progress Bar */}
-        <div className="grid grid-cols-2 gap-3 mb-10 max-w-xl mx-auto text-center">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-6 sm:mb-10 max-w-xl mx-auto text-center">
           <div
             onClick={() => setCurrentStep(1)}
-            className={`p-3 rounded-xl border transition-all cursor-pointer ${
+            className={`p-2.5 sm:p-3 rounded-xl border transition-all cursor-pointer ${
               currentStep === 1
                 ? 'border-[#E50914] bg-[#E50914]/10 text-white font-bold'
                 : 'border-neutral-800 bg-neutral-900/40 text-neutral-400'
@@ -351,7 +318,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
             onClick={() => {
               if (validateDeliveryForm()) setCurrentStep(2);
             }}
-            className={`p-3 rounded-xl border transition-all ${
+            className={`p-2.5 sm:p-3 rounded-xl border transition-all ${
               currentStep === 2
                 ? 'border-[#E50914] bg-[#E50914]/10 text-white font-bold'
                 : 'border-neutral-900 bg-neutral-950 text-neutral-600'
@@ -362,10 +329,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-10">
           {/* Main Checkout Form */}
           <div className="lg:col-span-7">
-            <div className="p-6 sm:p-8 rounded-2xl bg-[#0a0a0a] border border-neutral-800/90 shadow-xl">
+            <div className="p-4 sm:p-8 rounded-2xl bg-[#0a0a0a] border border-neutral-800/90 shadow-xl">
               {/* STEP 1: SIMPLIFIED RWANDA DELIVERY ADDRESS */}
               {currentStep === 1 && (
                 <motion.form
@@ -376,7 +343,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                   className="space-y-5"
                 >
                   <div className="border-b border-neutral-800/80 pb-4">
-                    <h2 className="font-display font-extrabold text-2xl text-white tracking-tight">
+                    <h2 className="font-display font-extrabold text-lg sm:text-2xl text-white tracking-tight">
                       {t('checkout.stepDelivery')}
                     </h2>
                     <p className="text-xs text-neutral-400 font-sans mt-1">
@@ -401,7 +368,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                       placeholder={t('checkout.fullNamePlaceholder')}
                       className={`w-full bg-neutral-900 border ${
                         errors.fullName ? 'border-[#E50914]' : 'border-neutral-800'
-                      } rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white transition-colors`}
+                      } rounded-xl px-4 py-3 text-base text-white placeholder-neutral-500 focus:outline-none focus:border-white transition-colors`}
                     />
                     {errors.fullName && (
                       <p className="mt-1 text-xs text-[#E50914] font-mono flex items-center gap-1">
@@ -418,12 +385,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                     <div className="relative">
                       <input
                         type="tel"
+                        maxLength={13}
+                        inputMode="tel"
                         value={phone}
                         onChange={e => handlePhoneChange(e.target.value)}
                         placeholder={t('checkout.phonePlaceholder')}
                         className={`w-full bg-neutral-900 border ${
                           errors.phone ? 'border-[#E50914]' : 'border-neutral-800'
-                        } rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 font-mono focus:outline-none focus:border-white transition-colors`}
+                        } rounded-xl px-4 py-3 text-base text-white placeholder-neutral-500 font-mono focus:outline-none focus:border-white transition-colors`}
                       />
                     </div>
                     {errors.phone ? (
@@ -450,7 +419,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                       }}
                       className={`w-full bg-neutral-900 border ${
                         errors.district ? 'border-[#E50914]' : 'border-neutral-800'
-                      } rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white transition-colors cursor-pointer`}
+                      } rounded-xl px-4 py-3 text-base text-white focus:outline-none focus:border-white transition-colors cursor-pointer`}
                     >
                       <option value="" disabled className="text-neutral-500">
                         {t('checkout.districtPlaceholder')}
@@ -485,7 +454,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                       placeholder={t('checkout.deliveryLocationPlaceholder')}
                       className={`w-full bg-neutral-900 border ${
                         errors.deliveryLocation ? 'border-[#E50914]' : 'border-neutral-800'
-                      } rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white transition-colors`}
+                      } rounded-xl px-4 py-3 text-base text-white placeholder-neutral-500 focus:outline-none focus:border-white transition-colors`}
                     />
                     {errors.deliveryLocation ? (
                       <p className="mt-1 text-xs text-[#E50914] font-mono flex items-center gap-1">
@@ -527,10 +496,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                   key="step2"
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="space-y-6"
+                  className="space-y-4 sm:space-y-6"
                 >
                   <div className="border-b border-neutral-800/80 pb-4">
-                    <h2 className="font-display font-extrabold text-2xl text-white tracking-tight">
+                    <h2 className="font-display font-extrabold text-lg sm:text-2xl text-white tracking-tight">
                       {t('checkout.stepPayment')}
                     </h2>
                     <p className="text-xs text-neutral-400 font-sans mt-1">
@@ -538,193 +507,33 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                     </p>
                   </div>
 
-                  {/* Selected Delivery Summary */}
-                  <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs font-mono">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-neutral-400 uppercase tracking-wider">{t('checkout.stepDelivery')}</span>
-                      <button
-                        onClick={() => setCurrentStep(1)}
-                        className="text-[#E50914] hover:underline uppercase text-[11px]"
-                      >
-                        {language === 'fr' ? 'Modifier' : 'Edit'}
-                      </button>
-                    </div>
-                    <p className="text-white font-bold">{fullName} • {phone}</p>
-                    <p className="text-neutral-400">{deliveryLocation}, {district}, Rwanda</p>
-                  </div>
-
                   {/* Payment Method Selector */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* MTN Mobile Money */}
-                    <div
-                      onClick={() => setPaymentMethod('momo')}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        paymentMethod === 'momo'
-                          ? 'border-[#E50914] bg-[#E50914]/10 shadow-sm'
-                          : 'border-neutral-800 bg-neutral-900/40 hover:border-neutral-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-yellow-400/20 text-yellow-400 flex items-center justify-center font-bold text-xs shrink-0">
-                          <Smartphone className="w-5 h-5" />
+                  <div className="grid grid-cols-1 gap-2 sm:gap-3">
+                    <div className="p-3 sm:p-4 rounded-xl border border-[#E50914] bg-[#E50914]/10 shadow-sm">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-yellow-400/20 text-yellow-400 flex items-center justify-center font-bold text-xs shrink-0">
+                          <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
                         <div>
                           <span className="text-xs font-bold text-white block">
-                            {t('checkout.momoPayment')}
+                            <span className="text-[11px] sm:text-xs">{t('checkout.momoPayment')}</span>
                           </span>
-                          <span className="text-[11px] text-neutral-400 block">
+                          <span className="text-[10px] sm:text-[11px] text-neutral-400 block leading-snug">
                             {t('checkout.momoSubtitle')}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Airtel Money */}
-                    <div
-                      onClick={() => setPaymentMethod('airtel')}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        paymentMethod === 'airtel'
-                          ? 'border-[#E50914] bg-[#E50914]/10 shadow-sm'
-                          : 'border-neutral-800 bg-neutral-900/40 hover:border-neutral-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center font-bold text-xs shrink-0">
-                          <Smartphone className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-white block">
-                            {t('checkout.airtelPayment')}
-                          </span>
-                          <span className="text-[11px] text-neutral-400 block">
-                            {t('checkout.airtelSubtitle')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Cash on Delivery */}
-                    <div
-                      onClick={() => setPaymentMethod('cod')}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        paymentMethod === 'cod'
-                          ? 'border-[#E50914] bg-[#E50914]/10 shadow-sm'
-                          : 'border-neutral-800 bg-neutral-900/40 hover:border-neutral-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
-                          <Banknote className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-white block">
-                            {t('checkout.codPayment')}
-                          </span>
-                          <span className="text-[11px] text-neutral-400 block">
-                            {t('checkout.codSubtitle')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Credit / Debit Card */}
-                    <div
-                      onClick={() => setPaymentMethod('card')}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        paymentMethod === 'card'
-                          ? 'border-[#E50914] bg-[#E50914]/10 shadow-sm'
-                          : 'border-neutral-800 bg-neutral-900/40 hover:border-neutral-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
-                          <CreditCard className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-white block">
-                            {t('checkout.cardPayment')}
-                          </span>
-                          <span className="text-[11px] text-neutral-400 block">
-                            {t('checkout.cardSubtitle')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
                   </div>
 
-                  {/* MoMo Prompt Detail */}
-                  {(paymentMethod === 'momo' || paymentMethod === 'airtel') && (
-                    <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs font-mono text-neutral-300 space-y-3">
-                      <p>
-                        {t('checkout.momoPrompt', { phone: phone || '+250 7XX XXX XXX' })}
-                      </p>
-                      <div>
-                        <label className="block text-[11px] uppercase tracking-wider text-neutral-400 mb-1">
-                          {language === 'fr' ? 'Numéro de paiement mobile' : 'Mobile Payment Phone Number'}
-                        </label>
-                        <input
-                          type="text"
-                          value={momoNumber || phone}
-                          onChange={e => setMomoNumber(e.target.value)}
-                          placeholder="+250 7XX XXX XXX"
-                          className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Card Fields */}
-                  {paymentMethod === 'card' && (
-                    <div className="p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 space-y-3">
-                      <div>
-                        <label className="block text-[11px] font-mono uppercase tracking-wider text-neutral-400 mb-1">
-                          {t('checkout.cardHolder')}
-                        </label>
-                        <input
-                          type="text"
-                          value={cardHolder || fullName}
-                          onChange={e => setCardHolder(e.target.value)}
-                          placeholder={fullName || 'Cardholder Name'}
-                          className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-mono uppercase tracking-wider text-neutral-400 mb-1">
-                          {t('checkout.cardNumber')}
-                        </label>
-                        <input
-                          type="text"
-                          value={cardNumber}
-                          onChange={e => setCardNumber(e.target.value)}
-                          className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[11px] font-mono uppercase tracking-wider text-neutral-400 mb-1">
-                            {t('checkout.cardExpiry')}
-                          </label>
-                          <input
-                            type="text"
-                            value={cardExp}
-                            onChange={e => setCardExp(e.target.value)}
-                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-mono uppercase tracking-wider text-neutral-400 mb-1">
-                            {t('checkout.cardCvc')}
-                          </label>
-                          <input
-                            type="text"
-                            value={cardCvc}
-                            onChange={e => setCardCvc(e.target.value)}
-                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <div className="p-3 sm:p-4 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs font-mono text-neutral-300 space-y-2 sm:space-y-3">
+                    <p>Complete your payment on your phone by dialing:</p>
+                    <code className="block rounded-lg bg-neutral-950 border border-neutral-800 px-3 py-3 text-center text-sm text-white break-all">
+                      *182*1*1*0795139774*AMOUNT#
+                    </code>
+                    <p className="text-neutral-400">Amount: {formatCurrency(total)}</p>
+                  </div>
 
                   {submitError && (
                     <div className="p-3 rounded-xl bg-red-950/50 border border-red-800/80 text-xs font-mono text-red-300 flex items-center gap-2">
@@ -734,11 +543,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                   )}
 
                   {/* Buttons: Back / Place Order */}
-                  <div className="pt-4 flex gap-3">
+                  <div className="pt-2 sm:pt-4 flex gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="px-5 py-4 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-xs font-mono uppercase text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5"
+                      className="px-3 sm:px-5 py-3 sm:py-4 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-[11px] sm:text-xs font-mono uppercase text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       {t('checkout.back')}
@@ -747,13 +556,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
                       type="button"
                       onClick={handlePlaceOrder}
                       disabled={isSubmitting}
-                      className="flex-1 py-4 rounded-xl bg-[#E50914] text-white hover:bg-red-700 font-mono text-xs uppercase tracking-widest font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-[#E50914]/20 disabled:opacity-50"
+                      className="flex-1 py-3 sm:py-4 rounded-xl bg-[#E50914] text-white hover:bg-red-700 font-mono text-[11px] sm:text-xs uppercase tracking-widest font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-[#E50914]/20 disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <span>{t('common.loading')}</span>
                       ) : (
                         <>
-                          {t('checkout.placeOrder')} ({formatCurrency(total)})
+                          {t('checkout.placeOrder')}
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
@@ -765,12 +574,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ onNavigate }) => {
           </div>
 
           {/* Right Column: Order Summary */}
-          <div className="lg:col-span-5 space-y-4">
-            <div className="p-6 rounded-2xl bg-[#0a0a0a] border border-neutral-800 sticky top-28 shadow-xl">
+          <div className="lg:col-span-5 space-y-3 sm:space-y-4">
+            <div className="p-4 sm:p-6 rounded-2xl bg-[#0a0a0a] border border-neutral-800 lg:sticky lg:top-28 shadow-xl lg:max-h-[calc(100dvh-8rem)] lg:overflow-y-auto">
               <h3 className="font-display font-bold text-base text-white border-b border-neutral-800 pb-3 flex items-center justify-between">
                 <span>{t('checkout.orderSummary')}</span>
                 <span className="text-xs font-mono text-neutral-500 font-normal">
-                  {itemCount} {itemCount === 1 ? 'pair' : 'pairs'}
+                  {pluralize(itemCount, 'pair')}
                 </span>
               </h3>
 

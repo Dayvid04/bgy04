@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, X, ArrowRight, Tag, Sparkles } from 'lucide-react';
+import { Search, X, ArrowRight, Clock3 } from 'lucide-react';
 import { api } from '../../services/api';
 import { Product } from '../../types';
+import { pluralize } from '../../utils/pluralize';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -11,7 +12,8 @@ interface SearchModalProps {
   onViewAllResults: (query: string) => void;
 }
 
-const POPULAR_SEARCHES = ['Aero-1', 'Phantom Low', 'Carbon', 'High-Tops', 'Monochrome', 'Runners'];
+const SEARCH_HISTORY_KEY = 'bgy_search_history';
+const MAX_SEARCH_HISTORY = 6;
 
 export const SearchModal: React.FC<SearchModalProps> = ({
   isOpen,
@@ -22,7 +24,31 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(SEARCH_HISTORY_KEY);
+      const parsed: unknown = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed)
+        ? parsed.filter((term): term is string => typeof term === 'string').slice(0, MAX_SEARCH_HISTORY)
+        : [];
+    } catch {
+      return [];
+    }
+  });
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const rememberSearch = (term: string) => {
+    const normalized = term.trim();
+    if (!normalized) return;
+    setSearchHistory(current => [
+      normalized,
+      ...current.filter(item => item.toLowerCase() !== normalized.toLowerCase()),
+    ].slice(0, MAX_SEARCH_HISTORY));
+  };
+
+  useEffect(() => {
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(searchHistory));
+  }, [searchHistory]);
 
   useEffect(() => {
     if (isOpen) {
@@ -69,7 +95,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4">
+      <div className="fixed inset-0 z-50 flex items-start justify-center px-4" style={{ paddingTop: 'max(4rem, env(safe-area-inset-top, 0px) + 4rem)' }}>
         {/* Backdrop */}
         <motion.div
           className="fixed inset-0 bg-black/85 backdrop-blur-md"
@@ -95,10 +121,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search BGY silhouettes, tech, or categories..."
+              placeholder="Search shoes..."
               className="flex-1 bg-transparent text-lg text-white placeholder-neutral-500 focus:outline-none font-sans"
               onKeyDown={e => {
                 if (e.key === 'Enter' && query.trim()) {
+                  rememberSearch(query);
                   onViewAllResults(query);
                   onClose();
                 }
@@ -112,28 +139,30 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 <X className="w-4 h-4" />
               </button>
             )}
-            <button
-              onClick={onClose}
-              className="text-xs uppercase font-mono tracking-widest text-neutral-400 hover:text-white px-2.5 py-1 border border-neutral-800 hover:border-neutral-600 rounded-md transition-colors"
-            >
-              ESC
-            </button>
           </div>
 
-          {/* Quick Trends & Suggestions */}
-          {!query && (
+          {/* Recent search history */}
+          {!query && searchHistory.length > 0 && (
             <div className="p-6">
-              <span className="text-xs uppercase font-mono tracking-[0.2em] text-neutral-500 block mb-3">
-                Trending Silhouettes
-              </span>
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-xs uppercase font-mono tracking-[0.2em] text-neutral-500">
+                  Search History
+                </span>
+                <button
+                  onClick={() => setSearchHistory([])}
+                  className="text-[10px] uppercase font-mono tracking-wider text-neutral-500 hover:text-white"
+                >
+                  Clear
+                </button>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {POPULAR_SEARCHES.map(term => (
+                {searchHistory.map(term => (
                   <button
                     key={term}
                     onClick={() => setQuery(term)}
                     className="px-3 py-1.5 rounded-full bg-neutral-800/60 hover:bg-neutral-800 text-neutral-300 hover:text-white text-xs font-sans tracking-wide transition-colors flex items-center gap-1.5 border border-neutral-800"
                   >
-                    <Tag className="w-3 h-3 text-[#E50914]" />
+                    <Clock3 className="w-3 h-3 text-neutral-500" />
                     {term}
                   </button>
                 ))}
@@ -143,7 +172,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
           {/* Live Search Results */}
           {query && (
-            <div className="p-4 max-h-[420px] overflow-y-auto">
+            <div className="p-4 overflow-y-auto" style={{ maxHeight: 'min(60dvh, 420px)' }}>
               {isLoading ? (
                 <div className="py-12 text-center text-neutral-400 text-sm font-mono flex items-center justify-center gap-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-[#E50914] animate-ping" />
@@ -152,9 +181,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({
               ) : results.length > 0 ? (
                 <div className="space-y-1">
                   <div className="px-3 py-1.5 flex justify-between items-center text-[11px] font-mono uppercase tracking-widest text-neutral-500">
-                    <span>Products ({results.length})</span>
+                    <span>{pluralize(results.length, 'product')}</span>
                     <button
                       onClick={() => {
+                        rememberSearch(query);
                         onViewAllResults(query);
                         onClose();
                       }}
@@ -168,6 +198,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     <div
                       key={prod._id}
                       onClick={() => {
+                        rememberSearch(query);
                         onSelectProduct(prod._id);
                         onClose();
                       }}

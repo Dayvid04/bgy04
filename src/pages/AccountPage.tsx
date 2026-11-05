@@ -21,6 +21,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { api } from '../services/api';
 import { Order, Product } from '../types';
 import { RWANDA_DISTRICTS } from '../data/rwandaDistricts';
+import { pluralize } from '../utils/pluralize';
 
 interface AccountPageProps {
   onNavigate: (route: string) => void;
@@ -40,6 +41,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const statusFlow = ['Confirmed', 'Processing', 'Shipped', 'Delivered'];
 
   // Profile Form state - Rwandan Address ONLY: Full Name, Phone Number, District, Delivery Location
   const [name, setName] = useState(user?.name || '');
@@ -76,7 +78,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#050505] text-white pt-36 pb-20 flex flex-col items-center justify-center px-4 select-none">
+      <div className="min-h-screen bg-[#050505] text-white pt-[calc(var(--header-height)+1rem)] md:pt-36 pb-20 flex flex-col items-center justify-center px-4 select-none">
         <UserIcon className="w-16 h-16 text-neutral-600 mb-4" />
         <h2 className="font-display font-bold text-2xl mb-2">Member Authentication Required</h2>
         <p className="text-xs font-mono text-neutral-400 mb-6 text-center max-w-sm">
@@ -121,7 +123,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-28 pb-24 select-none">
+    <div className="min-h-screen bg-[#050505] text-white pt-[calc(var(--header-height)+1rem)] md:pt-28 pb-24 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between border-b border-neutral-900 pb-6 gap-4">
@@ -163,7 +165,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 : 'bg-neutral-900/60 text-neutral-400 hover:text-white'
             }`}
           >
-            <Package className="w-4 h-4" /> My Orders ({orders.length})
+            <Package className="w-4 h-4" /> {pluralize(orders.length, 'My Order', 'My Orders')}
           </button>
 
           <button
@@ -174,7 +176,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 : 'bg-neutral-900/60 text-neutral-400 hover:text-white'
             }`}
           >
-            <Heart className="w-4 h-4" /> Wishlist ({wishlistProducts.length})
+            <Heart className="w-4 h-4" /> {pluralize(wishlistProducts.length, 'Wishlist item')}
           </button>
 
           <button
@@ -241,7 +243,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                           day: 'numeric',
                           year: 'numeric',
                         })}{' '}
-                        • {ord.products?.length || 0} item(s)
+                        • {pluralize(ord.products?.length || 0, 'item')}
                       </p>
 
                       <div className="flex gap-2 mt-3">
@@ -293,7 +295,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6">
                 {wishlistProducts.map((prod: Product) => (
                   <div
                     key={prod._id}
@@ -496,6 +498,40 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     {selectedOrder.shippingAddress.deliveryLocation || selectedOrder.shippingAddress.street}<br />
                     {selectedOrder.shippingAddress.district || selectedOrder.shippingAddress.city}, Rwanda
                   </p>
+                </div>
+
+                <div className="border-t border-neutral-800 pt-3">
+                  <span className="text-neutral-500 block uppercase tracking-wider text-[10px] mb-3">
+                    {language === 'fr' ? 'Suivi de commande' : 'Order Tracking'}
+                  </span>
+                  <div className="space-y-3">
+                    {statusFlow.map((step, index) => {
+                      const currentIndex = statusFlow.indexOf(selectedOrder.status);
+                      const isComplete = index <= currentIndex;
+
+                      return (
+                        <div key={step} className="flex items-center gap-3">
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              isComplete
+                                ? 'bg-[#E50914] text-white'
+                                : 'bg-neutral-800 text-neutral-500'
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-[11px] uppercase tracking-wider text-neutral-400">{step}</div>
+                            <div
+                              className={`h-1.5 rounded-full mt-1 ${
+                                isComplete ? 'bg-[#E50914]' : 'bg-neutral-800'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="border-t border-neutral-800 pt-3 flex justify-between font-bold text-sm">
