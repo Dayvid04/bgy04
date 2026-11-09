@@ -195,7 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914]"
               aria-label="BGY — go to home"
             >
-              <BgyLogo size="md" />
+              <BgyLogo size="md" className="header-brand" />
             </button>
 
             <nav className="hidden md:flex flex-1 items-center justify-center gap-5 xl:gap-7" aria-label="Main navigation">

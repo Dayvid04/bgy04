@@ -1,10 +1,10 @@
 services:
   - type: web
     name: bgy-footwear
-    runtime: docker
+    runtime: node
     plan: free
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV

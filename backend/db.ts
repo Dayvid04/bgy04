@@ -455,6 +455,24 @@ class DatabaseService {
           INDEX idx_admin_audit_created_at (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
+
+      const tablesWithLegacyIds = [
+        { name: 'products', type: 'INT' },
+        { name: 'orders', type: 'INT' },
+        { name: 'contact_messages', type: 'INT' },
+        { name: 'admin_audit_log', type: 'BIGINT' },
+      ] as const;
+      for (const table of tablesWithLegacyIds) {
+        const [idColumns]: any[] = await connection.query(`SHOW COLUMNS FROM \`${table.name}\` LIKE 'id'`);
+        const idColumn = idColumns[0];
+        if (!idColumn || String(idColumn.Extra).toLowerCase().includes('auto_increment')) continue;
+
+        const primaryKey = idColumn.Key === 'PRI' ? '' : ', ADD PRIMARY KEY (id)';
+        await connection.query(
+          `ALTER TABLE \`${table.name}\` MODIFY COLUMN id ${table.type} NOT NULL AUTO_INCREMENT${primaryKey}`
+        );
+      }
+
       const [userColumns]: any[] = await connection.query(`SHOW COLUMNS FROM users LIKE 'is_active'`);
       if (userColumns.length === 0) {
         await connection.query(`ALTER TABLE users ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1`);

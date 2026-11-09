@@ -5,6 +5,8 @@
 ═══════════════════════════════════════════════════════════════ */
 :root,
 html.dark {
+  --logo-ink:       #f5f5f5;
+  --logo-cutout:    #050505;
   --bg-base:        #050505;
   --bg-surface:     #080808;
   --bg-card:        #0a0a0a;
@@ -45,6 +47,8 @@ html.dark {
    LIGHT MODE
 ═══════════════════════════════════════════════════════════════ */
 html.light {
+  --logo-ink:       #0a0a0a;
+  --logo-cutout:    #ffffff;
   --bg-base:        #f5f5f5;
   --bg-surface:     #eeeeee;
   --bg-card:        #ffffff;
@@ -91,7 +95,14 @@ html.light {
   }
 
   html {
+    font-size: 80%;
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  @media (max-width: 767px) {
+    html {
+      font-size: 78%;
+    }
   }
 
   body {
@@ -179,13 +190,22 @@ html.light {
    NAVBAR
 ═══════════════════════════════════════════════════════════════ */
 .bgy-letter {
-  fill: #050505;
+  fill: var(--logo-ink);
   transition: fill 180ms ease;
   cursor: pointer;
 }
 
 .bgy-letter:hover {
   fill: #e50914;
+}
+
+.bgy-logo {
+  color: var(--logo-ink);
+}
+
+.header-brand svg {
+  width: clamp(110px, 42vw, 165px);
+  height: auto !important;
 }
 
 
