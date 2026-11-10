@@ -203,9 +203,15 @@ html.light {
   color: var(--logo-ink);
 }
 
-.header-brand svg {
-  width: clamp(110px, 42vw, 165px);
+.header-brand img {
+  width: clamp(96px, 34vw, 128px);
   height: auto !important;
+}
+
+@media (min-width: 768px) {
+  .header-brand img {
+    width: 165px;
+  }
 }
 
 
