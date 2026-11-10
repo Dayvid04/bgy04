@@ -217,13 +217,13 @@ html.light .bgy-logo-dot {
 }
 
 .header-brand img {
-  width: clamp(88px, 30vw, 110px);
+  width: clamp(44px, 15vw, 55px);
   height: auto !important;
 }
 
 @media (min-width: 768px) {
   .header-brand img {
-    width: 140px;
+    width: 70px;
   }
 }
 

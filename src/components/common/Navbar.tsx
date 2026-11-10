@@ -189,10 +189,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         }}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-3 py-3 sm:py-4">
+          <div className="relative flex items-center justify-between gap-3 py-3 sm:py-4">
+            <button
+              ref={hamburgerRef}
+              onClick={() => setMenuOpen(v => !v)}
+              className="md:hidden flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              aria-controls={MOBILE_MENU_ID}
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
             <button
               onClick={() => onNavigate('home')}
-              className="shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914]"
+              className="absolute left-1/2 -translate-x-1/2 shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914] md:static md:translate-x-0"
               aria-label="BGY — go to home"
             >
               <BgyLogo size="md" className="header-brand" />
@@ -342,16 +353,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </AnimatePresence>
               </div>
 
-              <button
-                ref={hamburgerRef}
-                onClick={() => setMenuOpen(v => !v)}
-                className="md:hidden flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
-                aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-                aria-expanded={menuOpen}
-                aria-controls={MOBILE_MENU_ID}
-              >
-                {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
             </div>
           </div>
 
