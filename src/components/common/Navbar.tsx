@@ -189,7 +189,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         }}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative flex items-center justify-between gap-3 py-3 sm:py-4 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-0">
+          <div className="flex items-center justify-between gap-3 py-3 sm:py-4 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-0">
             <button
               ref={hamburgerRef}
               onClick={() => setMenuOpen(v => !v)}
@@ -203,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => onNavigate('home')}
-              className="absolute left-1/2 -translate-x-1/2 translate-y-3 shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914] md:static md:flex md:translate-x-0 md:translate-y-0 md:items-center md:justify-self-start"
+              className="shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914] md:flex md:items-center md:justify-self-start"
               aria-label="BGY — go to home"
             >
               <BgyLogo size="md" className="header-brand" />
