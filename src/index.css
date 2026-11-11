@@ -226,6 +226,10 @@ html.light .bgy-logo-dot {
     width: 44px;
     height: 44px;
   }
+
+  .header-brand {
+    transform: translateY(3px);
+  }
 }
 
 .header-brand img {
@@ -247,6 +251,11 @@ html.light .bgy-logo-dot {
   :root {
     --header-height: calc(66px + env(safe-area-inset-top, 0px));
   }
+
+  .header-brand .bgy-logo-art {
+    display: flex;
+    align-items: center;
+  }
 }
 
 header {
@@ -259,6 +268,14 @@ header[class*="bg-black"] {
   -webkit-backdrop-filter: blur(20px);
   border-bottom-color: var(--border-base) !important;
 }
+
+@media (min-width: 768px) {
+  header.scrolled,
+  header[class*="bg-black"] {
+    border-bottom-color: color-mix(in srgb, var(--border-base) 35%, transparent) !important;
+  }
+}
+
 /* Target the scrolled state class applied by Navbar */
 .bg-black\/85 {
   background-color: var(--navbar-bg) !important;

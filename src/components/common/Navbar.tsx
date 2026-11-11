@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search, Heart, ShoppingBag, User as UserIcon,
-  Menu, X, Shield, LogOut, Sun, Moon, SlidersHorizontal,
+  Menu, X, Shield, LogOut, Sun, Moon,
 } from 'lucide-react';
 import { BgyLogo } from './BgyLogo';
 import { useAuth } from '../../context/AuthContext';
@@ -203,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => onNavigate('home')}
-              className="absolute left-1/2 -translate-x-1/2 shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914] md:static md:translate-x-0"
+              className="absolute left-1/2 -translate-x-1/2 shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914] md:static md:flex md:translate-x-0 md:items-center md:justify-self-start"
               aria-label="BGY — go to home"
             >
               <BgyLogo size="md" className="header-brand" />
@@ -364,9 +364,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Search className="h-[18px] w-[18px] shrink-0 text-neutral-400" aria-hidden="true" />
               <span className="truncate">Search shoes...</span>
-              <span aria-hidden="true" className="flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800">
-                <SlidersHorizontal className="h-4 w-4 text-neutral-400" aria-hidden="true" />
-              </span>
             </button>
           </div>
         </div>
