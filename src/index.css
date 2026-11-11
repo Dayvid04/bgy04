@@ -196,14 +196,20 @@ html.light {
 
 .bgy-logo-hover-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: auto;
   filter: var(--logo-hover-filter);
   pointer-events: none;
 }
 
 .bgy-logo-dot {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: auto;
   clip-path: inset(0 0 0 95%);
   pointer-events: none;
 }

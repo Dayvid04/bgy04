@@ -41,8 +41,8 @@ export const BgyLogo: React.FC<BgyLogoProps> = ({
   return (
     <div className={`bgy-logo inline-flex flex-col items-start select-none ${className}`}>
       <motion.div
-        className="bgy-logo-art relative block"
-        style={{ height: current.height }}
+        className="bgy-logo-art relative inline-block"
+        style={{ height: current.height, overflow: 'hidden' }}
         initial={animated ? { opacity: 0, scale: 0.96 } : false}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.08 }}
