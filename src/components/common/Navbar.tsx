@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search, Heart, ShoppingBag, User as UserIcon,
-  Menu, X, Shield, LogOut, Sun, Moon,
+  Menu, X, Shield, LogOut, Sun, Moon, SlidersHorizontal,
 } from 'lucide-react';
 import { BgyLogo } from './BgyLogo';
 import { useAuth } from '../../context/AuthContext';
@@ -189,11 +189,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         }}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative flex items-center justify-between gap-3 py-3 sm:py-4">
+          <div className="relative flex items-center justify-between gap-3 py-3 sm:py-4 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-0">
             <button
               ref={hamburgerRef}
               onClick={() => setMenuOpen(v => !v)}
-              className="md:hidden flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
+              className="navbar-icon-button md:hidden flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
               aria-controls={MOBILE_MENU_ID}
@@ -209,7 +209,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <BgyLogo size="md" className="header-brand" />
             </button>
 
-            <nav className="hidden md:flex flex-1 items-center justify-center gap-5 xl:gap-7" aria-label="Main navigation">
+            <nav className="hidden md:flex items-center justify-self-center justify-center gap-1 xl:gap-5" aria-label="Main navigation">
               {navLinks.map(link => {
                 const isActive = currentRoute === link.id;
                 return (
@@ -217,7 +217,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     key={link.id}
                     onClick={() => onNavigate(link.id)}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`relative text-[10px] uppercase tracking-[0.2em] font-mono transition-all duration-200 rounded-full px-2 py-2 min-h-[40px] flex items-center justify-center ${
+                    className={`relative text-[10px] uppercase tracking-[0.12em] xl:tracking-[0.2em] font-mono transition-all duration-200 rounded-full px-1 xl:px-2 py-2 min-h-[40px] flex items-center justify-center ${
                       isActive ? 'text-white' : 'text-neutral-400 hover:text-white'
                     }`}
                   >
@@ -234,29 +234,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               })}
             </nav>
 
-            <div className="flex items-center gap-2 sm:gap-2.5">
+            <div className="flex items-center gap-2 md:justify-self-end md:gap-1 xl:gap-2">
               <button
                 onClick={onOpenSearch}
-                className="hidden md:flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
+                className="navbar-icon-button hidden md:flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
                 aria-label={t('nav.search')}
               >
-                <Search className="w-4 h-4" />
+                <Search className="w-[18px] h-[18px]" />
               </button>
 
               <button
                 onClick={toggleTheme}
-                className="hidden md:flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
+                className="navbar-icon-button hidden md:flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white transition-colors"
                 aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               >
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                {isDark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
               </button>
 
               <button
                 onClick={() => onNavigate('wishlist')}
-                className="hidden md:flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white relative transition-colors"
+                className="navbar-icon-button hidden md:flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-neutral-500 hover:text-white relative transition-colors"
                 aria-label={`${t('nav.wishlist')}${wishlistCount > 0 ? `, ${pluralize(wishlistCount, 'item')}` : ''}`}
               >
-                <Heart className={`w-4 h-4 ${wishlistCount > 0 ? 'fill-[#E50914] text-[#E50914]' : ''}`} />
+                <Heart className={`w-[18px] h-[18px] ${wishlistCount > 0 ? 'fill-[#E50914] text-[#E50914]' : ''}`} />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[#E50914] px-1 text-[9px] font-mono font-bold text-white">
                     {wishlistCount > 9 ? '9+' : wishlistCount}
@@ -266,12 +266,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <button
                 onClick={openCart}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-[#E50914] hover:text-[#E50914] relative transition-colors"
+                className="navbar-icon-button flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-[#E50914] hover:text-[#E50914] relative transition-colors"
                 aria-label={`${t('nav.cart')}${itemCount > 0 ? `, ${pluralize(itemCount, 'item')}` : ''}`}
               >
-                <ShoppingBag className="w-4 h-4" />
+                <ShoppingBag className="w-[18px] h-[18px]" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-white px-1 text-[9px] font-mono font-bold text-black">
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#E50914] px-1 text-[9px] font-mono font-bold text-white ring-2 ring-black">
                     {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
@@ -283,7 +283,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     if (isAuthenticated) setUserDropdownOpen(v => !v);
                     else openAuthModal('login');
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-[#E50914] hover:text-[#E50914] transition-colors"
+                  className="navbar-icon-button flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900/80 text-neutral-200 hover:border-[#E50914] hover:text-[#E50914] transition-colors"
                   aria-label={isAuthenticated ? 'User menu' : t('nav.signIn')}
                   aria-expanded={userDropdownOpen}
                   aria-haspopup="menu"
@@ -293,7 +293,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {user?.name?.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || <UserIcon className="w-4 h-4" />}
                       <span className="absolute -right-1 -top-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-neutral-900" aria-label="Signed in" />
                     </span>
-                  ) : <UserIcon className="w-4 h-4" />}
+                  ) : <UserIcon className="w-[18px] h-[18px]" />}
                 </button>
 
                 <AnimatePresence>
@@ -356,14 +356,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          <div className="pb-3 md:hidden">
+          <div className="pb-[12px] md:hidden">
             <button
               onClick={onOpenSearch}
-              className="flex h-11 w-full items-center gap-3 rounded-full border border-neutral-700 bg-neutral-900/80 px-4 text-left text-sm text-neutral-300 transition-colors hover:border-neutral-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914]"
+              className="flex h-[44px] w-full items-center gap-3 rounded-full border border-neutral-700 bg-neutral-900/80 px-4 text-left text-sm text-neutral-300 transition-colors hover:border-neutral-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914]"
               aria-label={t('nav.search')}
             >
-              <Search className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
+              <Search className="h-[18px] w-[18px] shrink-0 text-neutral-400" aria-hidden="true" />
               <span className="truncate">Search shoes...</span>
+              <span aria-hidden="true" className="flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800">
+                <SlidersHorizontal className="h-4 w-4 text-neutral-400" aria-hidden="true" />
+              </span>
             </button>
           </div>
         </div>
@@ -409,8 +412,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : 'border-black/10 bg-white/96 shadow-[0_24px_64px_rgba(15,23,42,0.14)]'
               }`}
               style={{
-                top: 'calc(var(--header-height, 72px) + 8px)',
-                maxHeight: 'calc(100dvh - var(--header-height, 72px) - 24px)',
+                top: 'calc(var(--header-height, 108px) + 8px)',
+                maxHeight: 'calc(100dvh - var(--header-height, 108px) - 24px)',
                 paddingBottom: 'env(safe-area-inset-bottom, 12px)',
               }}
             >

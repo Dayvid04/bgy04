@@ -216,34 +216,36 @@ html.light .bgy-logo-dot {
   color: var(--text-primary);
 }
 
+.navbar-icon-button {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 767px) {
+  .navbar-icon-button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 .header-brand img {
-  width: clamp(44px, 15vw, 55px);
+  width: clamp(72px, 22vw, 86px);
   height: auto !important;
 }
 
 @media (min-width: 768px) {
   .header-brand img {
-    width: 70px;
+    width: 80px;
   }
 }
 
-
-/*
-  Expose the header height as a CSS custom property so the mobile
-  drawer can position itself exactly below the bar at any scroll
-  state without hard-coding a pixel value in JS.
-  py-5  → 20px top + 20px bottom + ~32px content  ≈ 72px
-  py-3.5→ 14px top + 14px bottom + ~32px content  ≈ 60px
-  We use 72px as the safe default; the drawer uses it via
-  calc(var(--header-height, 72px) + 8px).
-*/
 :root {
-  --header-height: calc(108px + env(safe-area-inset-top, 0px));
+  --header-height: calc(120px + env(safe-area-inset-top, 0px));
 }
 
 @media (min-width: 768px) {
   :root {
-    --header-height: calc(84px + env(safe-area-inset-top, 0px));
+    --header-height: calc(66px + env(safe-area-inset-top, 0px));
   }
 }
 
