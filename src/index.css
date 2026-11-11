@@ -230,6 +230,11 @@ html.light .bgy-logo-dot {
   .header-brand {
     transform: translateY(3px);
   }
+
+  .header-brand .bgy-logo-art {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .header-brand img {
