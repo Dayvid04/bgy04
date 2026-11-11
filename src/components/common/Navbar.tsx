@@ -203,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => onNavigate('home')}
-              className="absolute left-1/2 -translate-x-1/2 shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914] md:static md:flex md:translate-x-0 md:items-center md:justify-self-start"
+              className="absolute left-1/2 -translate-x-1/2 translate-y-3 shrink-0 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E50914] md:static md:flex md:translate-x-0 md:translate-y-0 md:items-center md:justify-self-start"
               aria-label="BGY — go to home"
             >
               <BgyLogo size="md" className="header-brand" />
