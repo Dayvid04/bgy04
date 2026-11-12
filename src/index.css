@@ -210,12 +210,9 @@ html.light {
   left: 0;
   height: 100%;
   width: auto;
-  clip-path: inset(0 0 0 95%);
+  clip-path: ellipse(2.8% 15.1% at 91% 84.2%);
+  filter: none;
   pointer-events: none;
-}
-
-html.light .bgy-logo-dot {
-  display: none;
 }
 
 .bgy-logo {
@@ -236,17 +233,8 @@ html.light .bgy-logo-dot {
   .header-brand .bgy-logo-art {
     display: flex;
     align-items: center;
-  }
-}
-
-.header-brand img {
-  width: clamp(72px, 22vw, 86px);
-  height: auto !important;
-}
-
-@media (min-width: 768px) {
-  .header-brand img {
-    width: 80px;
+    width: clamp(92px, 31vw, 124px);
+    height: auto !important;
   }
 }
 
@@ -262,7 +250,14 @@ html.light .bgy-logo-dot {
   .header-brand .bgy-logo-art {
     display: flex;
     align-items: center;
+    width: clamp(112px, 10vw, 144px);
   }
+}
+
+.header-brand img {
+  width: 100%;
+  height: auto !important;
+  max-width: 100%;
 }
 
 header {

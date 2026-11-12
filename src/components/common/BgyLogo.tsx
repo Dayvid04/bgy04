@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import logoImage from '../../../bgylogo.png';
+
+const logoImage = '/bgy-logo-transparent.png';
 
 interface BgyLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -42,7 +43,7 @@ export const BgyLogo: React.FC<BgyLogoProps> = ({
     <div className={`bgy-logo inline-flex flex-col items-start select-none ${className}`}>
       <motion.div
         className="bgy-logo-art relative inline-block"
-        style={{ height: current.height, overflow: 'hidden' }}
+        style={{ height: current.height }}
         initial={animated ? { opacity: 0, scale: 0.96 } : false}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.08 }}
@@ -56,14 +57,8 @@ export const BgyLogo: React.FC<BgyLogoProps> = ({
           alt="BGY Footwear"
           className="bgy-logo-image block w-auto"
           style={{ height: current.height }}
+          draggable={false}
         />
-          <img
-            src={logoImage}
-            alt=""
-            aria-hidden="true"
-            className="bgy-logo-dot block w-auto"
-            style={{ height: current.height }}
-          />
         {activeSegment && (
           <img
             src={logoImage}
@@ -76,6 +71,14 @@ export const BgyLogo: React.FC<BgyLogoProps> = ({
             }}
           />
         )}
+        <img
+          src={logoImage}
+          alt=""
+          aria-hidden="true"
+          className="bgy-logo-dot block w-auto"
+          style={{ height: current.height }}
+          draggable={false}
+        />
       </motion.div>
 
       {showTagline && (
